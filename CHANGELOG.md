@@ -6,6 +6,18 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- Focus module (`modules/focus`): start/stop a timed focus session from
+  the Study page or Home's "Start focus mode" quick action. Publishes
+  `focus.started`/`focus.ended` (auto-ends and still fires if never
+  stopped manually) and POSTs to every URL in `FOCUS_WEBHOOK_URLS` -
+  this is the trigger, not the enforcement, since no platform exposes a
+  remotely triggerable Do Not Disturb toggle. See
+  `modules/focus/README.md` for per-device setup (Pushcut on iPad,
+  Tasker+Join/AutoRemote on Android) and Windows' honest limitation.
+- `ModuleWidgetPage` (`apps/web/src/components/ModuleWidgetPage.tsx`)
+  now accepts either one module name or an array, so a page can combine
+  more than one module's widgets - used by the Study page to render
+  `modules/focus`'s widget alongside `modules/study`'s.
 - Frontend widget registry (`apps/web/src/modules/registry.ts`) now
   collects **every** widget a module's `frontend/index.tsx` exports
   (default plus any named exports), not just the default one -

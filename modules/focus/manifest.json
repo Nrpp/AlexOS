@@ -1,0 +1,17 @@
+{
+  "name": "focus",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Start/stop a focus session; fires an event and outbound webhooks so other devices can enter Do Not Disturb.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/start", "/stop", "/status"],
+  "widgets": [
+    {
+      "id": "focus-mode",
+      "name": "Focus mode",
+      "description": "Start/stop a focus session across devices."
+    }
+  ],
+  "icon": "do_not_disturb_on"
+}

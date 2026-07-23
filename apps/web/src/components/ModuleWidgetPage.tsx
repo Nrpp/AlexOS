@@ -5,12 +5,13 @@ import { useCore } from "../core/useCore";
 export interface ModuleWidgetPageProps {
   title: string;
   description: string;
-  moduleName: string;
+  /** One module's widgets, or several modules' widgets combined onto one page (e.g. Study + Focus). */
+  moduleName: string | string[];
   fallbackIcon: string;
   fallbackMessage: string;
 }
 
-/** A page whose entire content is one module's widget, or an honest empty state if that module isn't installed. */
+/** A page whose entire content is one or more modules' widgets, or an honest empty state if none are installed. */
 export function ModuleWidgetPage({
   title,
   description,
@@ -19,7 +20,8 @@ export function ModuleWidgetPage({
   fallbackMessage,
 }: ModuleWidgetPageProps) {
   const { eventBus, apiClient } = useCore();
-  const entry = widgetRegistry[moduleName];
+  const moduleNames = Array.isArray(moduleName) ? moduleName : [moduleName];
+  const widgets = moduleNames.flatMap((name) => widgetRegistry[name]?.widgets ?? []);
 
   return (
     <div className="flex flex-col gap-6 py-6">
@@ -29,8 +31,8 @@ export function ModuleWidgetPage({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {entry ? (
-          entry.widgets.map((Widget, index) => (
+        {widgets.length > 0 ? (
+          widgets.map((Widget, index) => (
             <Widget key={index} eventBus={eventBus} apiBaseUrl={apiClient.baseUrl} />
           ))
         ) : (

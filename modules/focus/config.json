@@ -1,0 +1,4 @@
+{
+  "defaultDurationMinutes": 60,
+  "webhookTimeoutSeconds": 5
+}

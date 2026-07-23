@@ -33,6 +33,7 @@ const DEDICATED_HOME_WIDGETS = new Set([
   "calendar",
   "tasks",
   "study",
+  "focus",
   "servers",
   "network",
   "communication",
@@ -125,16 +126,36 @@ function QuickActions() {
   const { apiClient } = useCore();
   const [addTaskOpen, setAddTaskOpen] = useState(false);
 
+  const startFocusMode = async () => {
+    try {
+      const response = await fetch(`${apiClient.baseUrl}/api/v1/modules/focus/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) throw new Error("focus module not installed");
+      const result: { endsAt: string | null } = await response.json();
+      const endsAt = result.endsAt
+        ? new Date(result.endsAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false })
+        : null;
+      openDialog({
+        title: "Focus mode started",
+        description: endsAt ? `Active until ${endsAt}. End it early from the Study page.` : "Focus mode is active.",
+      });
+    } catch {
+      openDialog({
+        title: "Couldn't start focus mode",
+        description: "The focus module isn't installed or the API is unreachable.",
+      });
+    }
+  };
+
   const actions = [
     { label: "Add task", icon: "add_task", onClick: () => setAddTaskOpen(true) },
     {
       label: "Start focus mode",
       icon: "timer",
-      onClick: () =>
-        openDialog({
-          title: "Start focus mode",
-          description: "This action isn't wired up to a module yet.",
-        }),
+      onClick: () => void startFocusMode(),
     },
     {
       label: "New note",

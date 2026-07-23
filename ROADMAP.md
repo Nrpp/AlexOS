@@ -76,11 +76,15 @@ membership) in favor of Google Cast for Media.
       SQL table just to remember a list across restarts.
 - [ ] Servers/Network/Communication need more than one sub-feature each -
       needs a decision on which specific sub-features to build.
-- [ ] "Start Focus Mode" tied to cross-device Do Not Disturb (Windows,
-      iPad, Samsung phone) - no simple, remotely-triggerable API exists
-      for any of the three without a locally-running per-device agent
-      (e.g. Tasker, Shortcuts/Pushcut automations, a custom Windows
-      script); needs a decision on which device-side tooling to adopt.
+- [x] `modules/focus` - start/stop a focus session, publishes
+      `focus.started`/`focus.ended` and fires outbound webhooks
+      (`FOCUS_WEBHOOK_URLS`) so other devices can react. This is the
+      trigger, not the enforcement - no platform exposes a remotely
+      triggerable DND toggle, so each device needs its own local
+      listener: Pushcut on iPad, Tasker+Join/AutoRemote on Android, and
+      (documented, not yet built) a WebSocket listener script for
+      Windows. See `modules/focus/README.md` for the honest limitations
+      and per-device setup.
 
 ## 0.3.0 — Persistence and real telemetry
 
