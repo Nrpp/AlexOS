@@ -6,6 +6,21 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- Frontend widget registry (`apps/web/src/modules/registry.ts`) now
+  collects **every** widget a module's `frontend/index.tsx` exports
+  (default plus any named exports), not just the default one -
+  `ModuleWidgetPage` renders all of them. Dropping a folder in
+  `modules/` is still the entire registration step; a module just
+  needs more than one exported component to get more than one widget.
+- Core Storage Manager gained a generic module-scoped JSON store
+  (`ModuleDataEntry` table, `get_module_data`/`set_module_data`) so a
+  small module can persist a list (exams, homework, to-dos) across
+  restarts without adding its own SQL table.
+- Study module (`modules/study`) gained three new widgets alongside
+  Pomodoro, all persisted server-side: **exam countdown** (name + date,
+  "In N days"/"N days overdue"), **homework** (title + optional due
+  date, check off to complete), and a **to-do list** dedicated to
+  studying (separate from the Google-Tasks-backed `modules/tasks`).
 - Real, fully-functional light theme (`apps/web/src/styles/globals.css`'s
   `:root[data-theme="light"]` block) - Settings' dark-theme toggle now
   actually switches themes instead of being disabled.
@@ -30,6 +45,11 @@ All notable changes to AlexOS are documented in this file.
   `notification.created`, `task.created`/`completed`) or to
   `room.updated` (its two publishers currently emit inconsistent payload
   shapes) to avoid replaying stale toasts on reconnect.
+- `scripts/configure_secrets.py`: interactive, stdlib-only script you run
+  directly on the Raspberry Pi (over SSH) that prompts for each secret
+  (Home Assistant token, Google OAuth credentials) and writes them
+  straight into `.env` on disk - never echoed back, never touching git.
+  Safe to re-run to update individual values later.
 - Weather module (`modules/weather`) now uses **real data** from
   Open-Meteo (no API key required) instead of a mock provider - edit
   `modules/weather/config.json`'s `latitude`/`longitude` to your location.

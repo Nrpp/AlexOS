@@ -37,3 +37,15 @@ class ConfigEntry(Base):
 
     key: Mapped[str] = mapped_column(String, primary_key=True)
     value: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class ModuleDataEntry(Base):
+    """Generic JSON-blob storage scoped by module name + key, so a module
+    that needs simple persistence (a list of exams, homework, to-dos) can
+    have it without adding its own table or touching SQLAlchemy directly."""
+
+    __tablename__ = "module_data_entries"
+
+    module: Mapped[str] = mapped_column(String, primary_key=True)
+    key: Mapped[str] = mapped_column(String, primary_key=True)
+    value: Mapped[str] = mapped_column(String, nullable=False)

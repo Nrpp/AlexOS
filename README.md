@@ -55,6 +55,18 @@ First, create your local environment file (both Docker and local dev read it):
 cp .env.example .env
 ```
 
+On the Raspberry Pi itself, fill in the secret values (Home Assistant
+token, Google OAuth credentials) with:
+
+```bash
+python scripts/configure_secrets.py
+```
+
+This prompts for each value and writes it straight into `.env` on disk -
+nothing is echoed back or sent anywhere else, and `.env` is already
+gitignored. Get the Google values first via `scripts/google_oauth_setup.py`
+(run on any machine with a browser, not necessarily the Pi).
+
 ### Development (local)
 
 ```bash

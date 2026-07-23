@@ -6,9 +6,14 @@ export interface WidgetComponentProps {
   apiBaseUrl?: string;
 }
 
-interface WidgetModuleFile {
-  default: ComponentType<WidgetComponentProps>;
-}
+type WidgetComponent = ComponentType<WidgetComponentProps>;
+
+// A module's frontend/index.tsx exports a default widget (its primary
+// one) plus, optionally, any number of named widgets for modules that
+// need more than one (e.g. Study's Pomodoro + exam countdown + to-do).
+// Both show up in `widgets` automatically - no registry changes needed
+// to add a second widget to an existing module.
+type WidgetModuleFile = { default: WidgetComponent } & Record<string, WidgetComponent>;
 
 // A relative glob (not the "@modules" alias) so Vite's static glob
 // analysis always finds it, regardless of alias-resolution quirks.
@@ -18,7 +23,10 @@ const widgetModules = import.meta.glob<WidgetModuleFile>("../../../../modules/*/
 
 export interface WidgetRegistryEntry {
   moduleName: string;
-  Component: WidgetModuleFile["default"];
+  /** The module's default-exported (primary) widget. */
+  Component: WidgetComponent;
+  /** Every widget the module exports, default first, in declaration order. */
+  widgets: WidgetComponent[];
 }
 
 /**
@@ -30,6 +38,7 @@ export const widgetRegistry: Record<string, WidgetRegistryEntry> = Object.fromEn
   Object.entries(widgetModules).map(([path, mod]) => {
     const match = /modules\/([^/]+)\/frontend\/index\.tsx$/.exec(path);
     const moduleName = match?.[1] ?? path;
-    return [moduleName, { moduleName, Component: mod.default }];
+    const { default: primary, ...named } = mod;
+    return [moduleName, { moduleName, Component: primary, widgets: [primary, ...Object.values(named)] }];
   }),
 );

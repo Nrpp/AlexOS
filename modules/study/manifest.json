@@ -1,16 +1,31 @@
 {
   "name": "study",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "AlexOS",
-  "description": "A Pomodoro focus timer - fully client-side, no backend needed.",
+  "description": "Pomodoro timer, exam countdown, homework tracker, and a dedicated to-do list.",
   "permissions": [],
   "dependencies": [],
-  "routes": [],
+  "routes": ["/exams", "/homework", "/todos"],
   "widgets": [
     {
       "id": "pomodoro",
       "name": "Pomodoro",
-      "description": "Work/break focus timer."
+      "description": "Work/break focus timer, fully client-side."
+    },
+    {
+      "id": "exam-countdown",
+      "name": "Exam countdown",
+      "description": "Days remaining until each upcoming exam."
+    },
+    {
+      "id": "homework",
+      "name": "Homework",
+      "description": "Homework items with optional due dates."
+    },
+    {
+      "id": "todo",
+      "name": "To-do",
+      "description": "A to-do list dedicated to studying, separate from Google Tasks."
     }
   ],
   "icon": "timer"

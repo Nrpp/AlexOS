@@ -11,7 +11,7 @@ from __future__ import annotations
 from sqlalchemy import select
 
 from app.db.database import Database
-from app.db.models import ConfigEntry, NotificationRecord
+from app.db.models import ConfigEntry, ModuleDataEntry, NotificationRecord
 
 
 class StorageManager:
@@ -46,3 +46,17 @@ class StorageManager:
                 select(NotificationRecord).order_by(NotificationRecord.created_at.desc()).limit(limit)
             )
             return list(result.scalars().all())
+
+    async def get_module_data(self, module: str, key: str) -> str | None:
+        async with self._database.session() as session:
+            entry = await session.get(ModuleDataEntry, (module, key))
+            return entry.value if entry else None
+
+    async def set_module_data(self, module: str, key: str, value: str) -> None:
+        async with self._database.session() as session:
+            entry = await session.get(ModuleDataEntry, (module, key))
+            if entry is None:
+                session.add(ModuleDataEntry(module=module, key=key, value=value))
+            else:
+                entry.value = value
+            await session.commit()

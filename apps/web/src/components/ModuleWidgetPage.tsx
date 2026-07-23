@@ -30,7 +30,9 @@ export function ModuleWidgetPage({
 
       <div className="grid gap-4 sm:grid-cols-2">
         {entry ? (
-          <entry.Component eventBus={eventBus} apiBaseUrl={apiClient.baseUrl} />
+          entry.widgets.map((Widget, index) => (
+            <Widget key={index} eventBus={eventBus} apiBaseUrl={apiClient.baseUrl} />
+          ))
         ) : (
           <Card>
             <CardEmpty icon={fallbackIcon} message={fallbackMessage} />

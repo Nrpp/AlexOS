@@ -62,15 +62,20 @@ membership) in favor of Google Cast for Media.
       Settings popover wired to real data instead of placeholders.
 - [x] Event Bus retained-event replay for "current state" events so the
       Status Bar and widgets don't show blank/stale data until the next tick.
-- [ ] Automate getting Google/Home Assistant secrets onto the Raspberry
+- [x] Automate getting Google/Home Assistant secrets onto the Raspberry
       Pi without ever putting them on GitHub (`scripts/configure_secrets.py`).
 - [ ] Full email viewing in `modules/communication` (read a message's
       full body, not just the inbox list).
-- [ ] Multi-widget module support - Study needs exam countdown, homework,
-      and a dedicated to-do list alongside Pomodoro; Servers/Network/
-      Communication need more than one sub-feature each. Currently the
-      widget registry only supports one default-exported widget per
-      module - this needs a real design decision before building more.
+- [x] Multi-widget module support - the frontend registry
+      (`apps/web/src/modules/registry.ts`) now collects every widget a
+      module exports (default plus any named exports), not just one.
+- [x] Study module: exam countdown, homework tracker, and a to-do list
+      dedicated to studying, alongside Pomodoro - all three persisted
+      server-side via a new generic module-data table (`ModuleDataEntry`)
+      on the Core Storage Manager, so a small module doesn't need its own
+      SQL table just to remember a list across restarts.
+- [ ] Servers/Network/Communication need more than one sub-feature each -
+      needs a decision on which specific sub-features to build.
 - [ ] "Start Focus Mode" tied to cross-device Do Not Disturb (Windows,
       iPad, Samsung phone) - no simple, remotely-triggerable API exists
       for any of the three without a locally-running per-device agent
