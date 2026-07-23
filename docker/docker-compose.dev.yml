@@ -46,6 +46,7 @@ services:
       - ../apps/web:/repo/apps/web
       - ../packages:/repo/packages
       - ../modules:/repo/modules
+      - ../tsconfig.base.json:/repo/tsconfig.base.json
       - web_node_modules:/repo/apps/web/node_modules
     ports:
       - "5173:5173"

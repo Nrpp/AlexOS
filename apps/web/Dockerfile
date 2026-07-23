@@ -4,10 +4,13 @@
 FROM node:20-alpine AS build
 WORKDIR /repo
 
-COPY package.json ./
+COPY package.json package-lock.json tsconfig.base.json ./
 COPY packages ./packages
 COPY apps/web ./apps/web
-RUN npm install
+# The widget registry's import.meta.glob scans this at build time - without
+# it the production bundle would silently ship with zero widgets.
+COPY modules ./modules
+RUN npm ci
 
 WORKDIR /repo/apps/web
 RUN npm run build
