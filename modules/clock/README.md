@@ -7,8 +7,9 @@ folder's shape when starting a new module.
 ## What it does
 
 - **Backend** (`backend/`): exposes `GET /api/v1/modules/clock/time` for an
-  initial read, and an `on_load(event_bus)` hook that starts a one-second
-  tick loop publishing `clock.tick` on the Core Event Bus - the only way
+  initial read, and an `on_load(event_bus, config)` hook that starts a
+  tick loop (interval from `config.json`'s `tickIntervalSeconds`, 1 second
+  by default) publishing `clock.tick` on the Core Event Bus - the only way
   it ever reaches the frontend.
 - **Frontend** (`frontend/index.tsx`): a `ClockWidget` that subscribes to
   `clock.tick` and renders the current time and date. It also runs a local

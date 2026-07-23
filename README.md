@@ -92,6 +92,7 @@ touch display.
 ```bash
 npm run test --workspace=apps/web     # frontend (Vitest)
 cd apps/api && pytest                 # backend
+pytest                                # modules, from the repo root
 ```
 
 ## Design system

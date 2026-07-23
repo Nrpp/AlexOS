@@ -6,6 +6,8 @@ import { formatFriendlyDate, formatTime } from "@alexos/utils";
 export interface ClockWidgetProps {
   /** Injected by the host app's CoreProvider - keeps this widget portable across future clients. */
   eventBus?: EventBusLike | null;
+  /** Unused here - clock needs no REST calls - kept for a consistent widget prop contract. */
+  apiBaseUrl?: string;
 }
 
 /** The reference widget. Ticks from the Core Event Bus; falls back to a

@@ -9,7 +9,7 @@
     "preview": "vite preview --port 5173",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint --config ./.eslintrc.cjs --resolve-plugins-relative-to . src \"../../modules/*/frontend/**/*.{ts,tsx}\" --max-warnings 0"
   },
   "dependencies": {
     "@alexos/config": "*",

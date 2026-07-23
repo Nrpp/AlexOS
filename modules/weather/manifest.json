@@ -1,0 +1,17 @@
+{
+  "name": "weather",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Current conditions and today's high/low - mocked for now, swap the provider for a real API later.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/current"],
+  "widgets": [
+    {
+      "id": "weather",
+      "name": "Weather",
+      "description": "Current conditions, temperature, and today's high/low."
+    }
+  ],
+  "icon": "partly_cloudy_day"
+}

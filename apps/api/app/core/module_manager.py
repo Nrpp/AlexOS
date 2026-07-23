@@ -12,8 +12,9 @@ import importlib.util
 import json
 import logging
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter
 from pydantic import ValidationError
@@ -30,6 +31,7 @@ class LoadedModule:
     path: Path
     has_backend: bool
     has_frontend: bool
+    config: dict[str, Any] = field(default_factory=dict)
     router: APIRouter | None = None
 
 
@@ -68,15 +70,28 @@ class ModuleManager:
                 path=module_dir,
                 has_backend=(module_dir / "backend" / "__init__.py").exists(),
                 has_frontend=(module_dir / "frontend" / "index.tsx").exists(),
+                config=self._read_config(module_dir),
             )
             self._modules[manifest.name] = loaded
 
         return self.modules
 
+    @staticmethod
+    def _read_config(module_dir: Path) -> dict[str, Any]:
+        config_path = module_dir / "config.json"
+        if not config_path.exists():
+            return {}
+        try:
+            return json.loads(config_path.read_text())
+        except json.JSONDecodeError as error:
+            logger.warning("Ignoring invalid config.json for module '%s' (%s)", module_dir.name, error)
+            return {}
+
     def load_backend_routers(self, event_bus: EventBus) -> list[tuple[str, APIRouter]]:
         """Dynamically import each module's backend package, mount its router if
-        any, and call its optional `on_load(event_bus)` startup hook - the only
-        way a module gets a handle to the Event Bus."""
+        any, and call its optional `on_load(event_bus, config)` startup hook -
+        the only way a module gets a handle to the Event Bus and its own
+        config.json."""
         mounted: list[tuple[str, APIRouter]] = []
         for module in self._modules.values():
             if not module.has_backend:
@@ -95,7 +110,7 @@ class ModuleManager:
             on_load = getattr(imported, "on_load", None)
             if callable(on_load):
                 try:
-                    on_load(event_bus)
+                    on_load(event_bus, module.config)
                 except Exception:
                     logger.exception("on_load() failed for module '%s'", module.manifest.name)
 

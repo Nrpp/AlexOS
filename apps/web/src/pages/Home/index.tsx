@@ -3,10 +3,12 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardSubtitle,
   CardContent,
   CardEmpty,
   Button,
+  Dialog,
+  DialogContent,
+  Input,
 } from "@alexos/ui";
 import { getDayPart, capitalize } from "@alexos/utils";
 import { widgetRegistry } from "../../modules/registry";
@@ -19,6 +21,10 @@ const GREETINGS: Record<ReturnType<typeof getDayPart>, string> = {
   evening: "Good evening",
   night: "Good night",
 };
+
+// These widgets have dedicated cards on Home below - excluded here so
+// they don't render twice via the generic Favorite widgets loop.
+const DEDICATED_HOME_WIDGETS = new Set(["weather", "calendar", "tasks"]);
 
 function Greeting() {
   const { apiClient } = useCore();
@@ -49,46 +55,111 @@ function Greeting() {
   );
 }
 
+interface AddTaskDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  apiBaseUrl: string;
+}
+
+/** Its own component (not the generic DialogsLayer) so the input's live
+ * state belongs to something that actually re-renders while typing. */
+function AddTaskDialog({ open, onOpenChange, apiBaseUrl }: AddTaskDialogProps) {
+  const [title, setTitle] = useState("");
+
+  const submit = async () => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    await fetch(`${apiBaseUrl}/api/v1/modules/tasks/tasks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: trimmed }),
+    });
+    setTitle("");
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        title="Add task"
+        primaryAction={
+          <Button variant="primary" onClick={() => void submit()}>
+            Add
+          </Button>
+        }
+        secondaryAction={
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+        }
+      >
+        <Input
+          autoFocus
+          placeholder="Task title..."
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          onKeyDown={(event) => event.key === "Enter" && void submit()}
+          aria-label="New task title"
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function QuickActions() {
   const { openDialog } = useDialogs();
+  const { apiClient } = useCore();
+  const [addTaskOpen, setAddTaskOpen] = useState(false);
 
   const actions = [
-    { label: "Add task", icon: "add_task" },
-    { label: "Start focus mode", icon: "timer" },
-    { label: "New note", icon: "note_add" },
+    { label: "Add task", icon: "add_task", onClick: () => setAddTaskOpen(true) },
+    {
+      label: "Start focus mode",
+      icon: "timer",
+      onClick: () =>
+        openDialog({
+          title: "Start focus mode",
+          description: "This action isn't wired up to a module yet.",
+        }),
+    },
+    {
+      label: "New note",
+      icon: "note_add",
+      onClick: () =>
+        openDialog({
+          title: "New note",
+          description: "This action isn't wired up to a module yet.",
+        }),
+    },
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Quick actions</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-wrap gap-3">
-        {actions.map((action) => (
-          <Button
-            key={action.label}
-            variant="secondary"
-            onClick={() =>
-              openDialog({
-                title: action.label,
-                description: "This action isn't wired up to a module yet.",
-              })
-            }
-          >
-            <span className="material-symbols-rounded text-lg" aria-hidden>
-              {action.icon}
-            </span>
-            {action.label}
-          </Button>
-        ))}
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick actions</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-3">
+          {actions.map((action) => (
+            <Button key={action.label} variant="secondary" onClick={action.onClick}>
+              <span className="material-symbols-rounded text-lg" aria-hidden>
+                {action.icon}
+              </span>
+              {action.label}
+            </Button>
+          ))}
+        </CardContent>
+      </Card>
+      <AddTaskDialog open={addTaskOpen} onOpenChange={setAddTaskOpen} apiBaseUrl={apiClient.baseUrl} />
+    </>
   );
 }
 
 function FavoriteWidgets() {
-  const { eventBus } = useCore();
-  const widgets = Object.values(widgetRegistry);
+  const { eventBus, apiClient } = useCore();
+  const widgets = Object.values(widgetRegistry).filter(
+    ({ moduleName }) => !DEDICATED_HOME_WIDGETS.has(moduleName),
+  );
 
   if (widgets.length === 0) {
     return (
@@ -104,10 +175,46 @@ function FavoriteWidgets() {
   return (
     <>
       {widgets.map(({ moduleName, Component }) => (
-        <Component key={moduleName} eventBus={eventBus} />
+        <Component key={moduleName} eventBus={eventBus} apiBaseUrl={apiClient.baseUrl} />
       ))}
     </>
   );
+}
+
+/** Renders a dedicated module's widget if installed, otherwise the honest empty state it replaces. */
+function DedicatedWidgetSlot({
+  moduleName,
+  fallbackIcon,
+  fallbackTitle,
+  fallbackMessage,
+}: {
+  moduleName: string;
+  fallbackIcon: string;
+  fallbackTitle: string;
+  fallbackMessage: string;
+}) {
+  const { eventBus, apiClient } = useCore();
+  const entry = widgetRegistry[moduleName];
+
+  if (!entry) {
+    return (
+      <Card>
+        <CardHeader
+          icon={
+            <span className="material-symbols-rounded" aria-hidden>
+              {fallbackIcon}
+            </span>
+          }
+        >
+          <CardTitle>{fallbackTitle}</CardTitle>
+        </CardHeader>
+        <CardEmpty icon={fallbackIcon} message={fallbackMessage} />
+      </Card>
+    );
+  }
+
+  const { Component } = entry;
+  return <Component eventBus={eventBus} apiBaseUrl={apiClient.baseUrl} />;
 }
 
 export default function HomePage() {
@@ -118,45 +225,26 @@ export default function HomePage() {
       <div className="grid gap-4 sm:grid-cols-2">
         <FavoriteWidgets />
 
-        <Card>
-          <CardHeader
-            icon={
-              <span className="material-symbols-rounded" aria-hidden>
-                partly_cloudy_day
-              </span>
-            }
-          >
-            <CardTitle>Weather</CardTitle>
-            <CardSubtitle>Local conditions</CardSubtitle>
-          </CardHeader>
-          <CardEmpty icon="cloud_off" message="No weather module connected yet." />
-        </Card>
+        <DedicatedWidgetSlot
+          moduleName="weather"
+          fallbackIcon="cloud_off"
+          fallbackTitle="Weather"
+          fallbackMessage="No weather module connected yet."
+        />
 
-        <Card>
-          <CardHeader
-            icon={
-              <span className="material-symbols-rounded" aria-hidden>
-                calendar_today
-              </span>
-            }
-          >
-            <CardTitle>Today's calendar</CardTitle>
-          </CardHeader>
-          <CardEmpty icon="event_busy" message="No events today." />
-        </Card>
+        <DedicatedWidgetSlot
+          moduleName="calendar"
+          fallbackIcon="event_busy"
+          fallbackTitle="Today's calendar"
+          fallbackMessage="No events today."
+        />
 
-        <Card>
-          <CardHeader
-            icon={
-              <span className="material-symbols-rounded" aria-hidden>
-                checklist
-              </span>
-            }
-          >
-            <CardTitle>Today's tasks</CardTitle>
-          </CardHeader>
-          <CardEmpty icon="task_alt" message="No upcoming tasks." />
-        </Card>
+        <DedicatedWidgetSlot
+          moduleName="tasks"
+          fallbackIcon="task_alt"
+          fallbackTitle="Today's tasks"
+          fallbackMessage="No upcoming tasks."
+        />
 
         <QuickActions />
 

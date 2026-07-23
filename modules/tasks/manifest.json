@@ -1,0 +1,17 @@
+{
+  "name": "tasks",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Today's tasks, held in memory for now - add and complete them inline or from the Home page's Quick Actions.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/tasks"],
+  "widgets": [
+    {
+      "id": "tasks",
+      "name": "Tasks",
+      "description": "Today's tasks - add and complete them inline."
+    }
+  ],
+  "icon": "checklist"
+}

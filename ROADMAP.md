@@ -8,20 +8,32 @@ previous one without breaking it.
 Monorepo, Core, app shell, design system, module framework, one reference
 module, Docker for dev and production. No real integrations yet.
 
-## 0.1.0 — First real modules
+## 0.1.0 — First modules (in progress)
 
-- Weather module (real data, `WeatherUpdated` event).
-- Calendar module (local/CalDAV).
-- Tasks module.
-- Notification Manager wired to real events (server online/offline,
-  new mail, task completed).
-- Persistent storage for user configuration and module state.
+Weather, Calendar, Tasks, and Servers all exist and are wired end-to-end
+(manifest → backend → Event Bus → widget), but on mock or in-memory data
+rather than real sources - each module's README documents exactly what
+"going real" requires:
 
-## 0.2.0 — Servers & Network
+- [x] Weather module (`modules/weather`) - mocked reading, `weather.updated` event.
+- [x] Calendar module (`modules/calendar`) - events seeded from `config.json`, no live source yet.
+- [x] Tasks module (`modules/tasks`) - in-memory, `task.created`/`task.completed` events, lost on restart.
+- [x] Servers module (`modules/servers`) - simulated CPU/RAM/disk/temperature, `server.metrics` event.
+- [ ] Real weather API integration.
+- [ ] Real calendar source (CalDAV/Google Calendar).
+- [ ] Persistent storage for tasks and module state (currently only
+      Core config/notifications use the Storage Manager).
+- [ ] Notification Manager wired to real events (server online/offline,
+      new mail, task completed).
+- [ ] Real host telemetry for Servers - needs a deliberate decision about
+      bind-mounting `/proc`/`/sys`/the disk device into the container
+      (see `modules/servers/README.md`).
 
-- Servers page: CPU/RAM/disk/temperature, Docker containers, restart
-  actions.
+## 0.2.0 — Network & real telemetry
+
 - Network page: connected devices, bandwidth, latency, public/internal IP.
+- Real Servers telemetry (the container-privilege decision above),
+  Docker container stats, restart actions.
 - Background workers for system monitoring.
 
 ## 0.3.0 — Communication & Media

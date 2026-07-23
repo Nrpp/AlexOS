@@ -2,6 +2,8 @@ import type { ComponentType } from "react";
 
 export interface WidgetComponentProps {
   eventBus?: unknown;
+  /** Base URL for the widget's own REST calls (initial reads, writes) - most widgets need this alongside the Event Bus. */
+  apiBaseUrl?: string;
 }
 
 interface WidgetModuleFile {

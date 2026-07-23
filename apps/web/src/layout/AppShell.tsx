@@ -19,7 +19,7 @@ export function AppShell() {
     <DialogsLayer>
       <div className="min-h-screen bg-background-primary">
         <StatusBar />
-        <main className="mx-auto max-w-5xl px-6 pb-32 pt-2">
+        <main className="mx-auto max-w-[90rem] px-6 pb-32 pt-2">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

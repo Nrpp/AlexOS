@@ -1,0 +1,17 @@
+{
+  "name": "servers",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "CPU, RAM, disk, and temperature - simulated for now. Real host telemetry needs a deliberate decision about container privileges, see README.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/stats"],
+  "widgets": [
+    {
+      "id": "servers",
+      "name": "Servers",
+      "description": "CPU, RAM, disk, and temperature."
+    }
+  ],
+  "icon": "dns"
+}

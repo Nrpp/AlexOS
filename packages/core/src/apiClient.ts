@@ -12,7 +12,8 @@ export class ApiError extends Error {
 
 /** Thin REST client for the AlexOS API Gateway (`/api/v1/*`). */
 export class ApiClient {
-  constructor(private readonly baseUrl: string) {}
+  /** Exposed so widgets can build their own module-specific request URLs. */
+  constructor(public readonly baseUrl: string) {}
 
   async getSystemHealth(): Promise<SystemHealth> {
     return this.request<SystemHealth>("/api/v1/system/health");
