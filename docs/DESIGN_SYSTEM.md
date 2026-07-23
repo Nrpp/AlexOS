@@ -14,24 +14,27 @@ when a token changes.
 
 ## Color palette
 
-| Token | Hex | Tailwind class |
-|---|---|---|
-| Background primary | `#09090B` | `bg-background-primary` |
-| Background secondary | `#111113` | `bg-background-secondary` |
-| Surface | `#18181B` | `bg-surface` |
-| Surface hover | `#222226` | `bg-surface-hover` |
-| Accent primary | `#3B82F6` | `bg-accent-primary` / `text-accent-primary` |
-| Accent secondary | `#8B5CF6` | `bg-accent-secondary` |
-| Success | `#22C55E` | `bg-success` |
-| Warning | `#F59E0B` | `bg-warning` |
-| Danger | `#EF4444` | `bg-danger` |
-| Information | `#06B6D4` | `bg-information` |
-| Text primary | `#FFFFFF` | `text-text-primary` |
-| Text secondary | `#A1A1AA` | `text-text-secondary` |
-| Border | `rgba(255,255,255,0.08)` | `border-border` |
+| Token | Dark | Light | Tailwind class |
+|---|---|---|---|
+| Background primary | `#09090B` | `#F7F7F8` | `bg-background-primary` |
+| Background secondary | `#111113` | `#EFEFF1` | `bg-background-secondary` |
+| Surface | `#18181B` | `#FFFFFF` | `bg-surface` |
+| Surface hover | `#222226` | `#F1F1F3` | `bg-surface-hover` |
+| Accent primary | `#3B82F6` | same | `bg-accent-primary` / `text-accent-primary` |
+| Accent secondary | `#8B5CF6` | same | `bg-accent-secondary` |
+| Success | `#22C55E` | same | `bg-success` |
+| Warning | `#F59E0B` | same | `bg-warning` |
+| Danger | `#EF4444` | same | `bg-danger` |
+| Information | `#06B6D4` | same | `bg-information` |
+| Text primary | `#FFFFFF` | `#09090B` | `text-text-primary` |
+| Text secondary | `#A1A1AA` | `#52525B` | `text-text-secondary` |
+| Border | `rgba(255,255,255,0.08)` | `rgba(0,0,0,0.08)` | `border-border` |
 
-Dark is the only theme shipped in the Foundation milestone; light is
-scaffolded in `@alexos/hooks`' `useTheme` but not yet designed.
+Both themes are fully supported. Dark values live in `:root`; light
+values override them under `[data-theme="light"]` (set on `<html>` by
+`@alexos/hooks`' `useTheme`, toggled from Settings). Accent and semantic
+colors intentionally don't change between themes - only the
+background/surface/text/border axis does.
 
 ## Typography
 

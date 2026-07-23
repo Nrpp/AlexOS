@@ -6,7 +6,7 @@ import { useCore } from "../../core/useCore";
 import { PagePlaceholder } from "../../components/PagePlaceholder";
 
 function AppearanceCard() {
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
     <Card>
@@ -18,11 +18,15 @@ function AppearanceCard() {
         }
       >
         <CardTitle>Appearance</CardTitle>
-        <CardSubtitle>Light theme isn't built yet - this toggle is disabled rather than pretending to work.</CardSubtitle>
+        <CardSubtitle>Dark and light are both fully supported.</CardSubtitle>
       </CardHeader>
       <CardContent className="flex items-center justify-between">
         <span>Dark theme</span>
-        <Toggle checked={theme === "dark"} onCheckedChange={() => undefined} disabled label="Dark theme (only option for now)" />
+        <Toggle
+          checked={theme === "dark"}
+          onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+          label="Toggle dark theme"
+        />
       </CardContent>
     </Card>
   );

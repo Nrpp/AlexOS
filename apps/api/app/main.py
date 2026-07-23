@@ -18,6 +18,7 @@ from app.core.config_manager import ConfigManager
 from app.core.event_bus import EventBus
 from app.core.module_manager import ModuleManager
 from app.core.notification_manager import NotificationManager
+from app.core.notification_rules import register_notification_rules
 from app.core.storage_manager import StorageManager
 from app.db.database import Database
 from app.settings import get_settings
@@ -44,7 +45,9 @@ async def lifespan(app: FastAPI):
     app.state.event_bus = event_bus
     app.state.module_manager = module_manager
     app.state.config_manager = ConfigManager(storage_manager)
-    app.state.notification_manager = NotificationManager(event_bus, storage_manager)
+    notification_manager = NotificationManager(event_bus, storage_manager)
+    app.state.notification_manager = notification_manager
+    register_notification_rules(event_bus, notification_manager)
 
     for module in module_manager.modules:
         await event_bus.publish(

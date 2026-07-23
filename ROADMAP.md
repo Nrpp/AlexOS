@@ -55,6 +55,28 @@ membership) in favor of Google Cast for Media.
       multicast discovery doesn't cross Docker's bridge network) - the
       module itself isn't built yet.
 
+## 0.2.1 — Core UI polish (done)
+
+- [x] Real light theme (Settings' toggle actually switches themes now).
+- [x] Status Bar weather indicator, Notifications popover, and Quick
+      Settings popover wired to real data instead of placeholders.
+- [x] Event Bus retained-event replay for "current state" events so the
+      Status Bar and widgets don't show blank/stale data until the next tick.
+- [ ] Automate getting Google/Home Assistant secrets onto the Raspberry
+      Pi without ever putting them on GitHub (`scripts/configure_secrets.py`).
+- [ ] Full email viewing in `modules/communication` (read a message's
+      full body, not just the inbox list).
+- [ ] Multi-widget module support - Study needs exam countdown, homework,
+      and a dedicated to-do list alongside Pomodoro; Servers/Network/
+      Communication need more than one sub-feature each. Currently the
+      widget registry only supports one default-exported widget per
+      module - this needs a real design decision before building more.
+- [ ] "Start Focus Mode" tied to cross-device Do Not Disturb (Windows,
+      iPad, Samsung phone) - no simple, remotely-triggerable API exists
+      for any of the three without a locally-running per-device agent
+      (e.g. Tasker, Shortcuts/Pushcut automations, a custom Windows
+      script); needs a decision on which device-side tooling to adopt.
+
 ## 0.3.0 — Persistence and real telemetry
 
 - Persistent storage for module state (currently only Core

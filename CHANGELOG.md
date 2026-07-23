@@ -6,6 +6,30 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- Real, fully-functional light theme (`apps/web/src/styles/globals.css`'s
+  `:root[data-theme="light"]` block) - Settings' dark-theme toggle now
+  actually switches themes instead of being disabled.
+- Status Bar (`apps/web/src/layout/StatusBar/StatusBar.tsx`) is now fully
+  wired instead of showing static placeholders:
+  - Weather indicator reads live `weather.updated` data off the Event Bus.
+  - Notifications button opens a real popover (`packages/ui`'s new
+    `Popover` primitive, wrapping Radix) listing persisted notifications
+    from the new `GET /api/v1/notifications` endpoint.
+  - Quick Settings button opens a popover with a working dark/light theme
+    toggle and a link to the full Settings page.
+- `apps/api/app/core/notification_rules.py`: Core-level rules that turn
+  raw module events into real notifications - currently `mail.received`
+  → an "information" notification - registered once in `main.py`, no
+  module needs to know notifications exist.
+- Event Bus (`apps/api/app/core/event_bus.py`) gained an opt-in
+  `retain: bool` parameter and `get_all_last()`, so newly-connected
+  WebSocket clients immediately receive the most recent "current state"
+  event (`weather.updated`, `server.metrics`, `network.updated`,
+  `media.updated`) instead of waiting for the next tick. Deliberately
+  **not** applied to one-time action events (`mail.received`,
+  `notification.created`, `task.created`/`completed`) or to
+  `room.updated` (its two publishers currently emit inconsistent payload
+  shapes) to avoid replaying stale toasts on reconnect.
 - Weather module (`modules/weather`) now uses **real data** from
   Open-Meteo (no API key required) instead of a mock provider - edit
   `modules/weather/config.json`'s `latitude`/`longitude` to your location.

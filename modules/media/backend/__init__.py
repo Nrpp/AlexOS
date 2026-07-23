@@ -23,4 +23,4 @@ async def _tick_forever(event_bus: EventBus) -> None:
     while True:
         await asyncio.sleep(1)
         if player.tick():
-            await event_bus.publish("media.updated", state_to_payload(player), source="media")
+            await event_bus.publish("media.updated", state_to_payload(player), source="media", retain=True)

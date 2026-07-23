@@ -24,5 +24,7 @@ def on_load(event_bus: EventBus, config: dict[str, Any]) -> None:
 
 async def _tick_forever(event_bus: EventBus, interval_seconds: float) -> None:
     while True:
-        await event_bus.publish("server.metrics", stats_to_payload(provider.read()), source="servers")
+        await event_bus.publish(
+            "server.metrics", stats_to_payload(provider.read()), source="servers", retain=True
+        )
         await asyncio.sleep(interval_seconds)

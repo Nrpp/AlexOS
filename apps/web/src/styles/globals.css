@@ -8,6 +8,11 @@
  * Design tokens - the rendering source of truth. Mirrored as typed
  * constants in packages/config/src/theme.ts for use in plain JS/TS
  * (Framer Motion durations, etc). Keep both in sync when a token changes.
+ *
+ * :root holds the dark values as the no-flash-of-unstyled-content
+ * default; [data-theme="light"] (set by @alexos/hooks' useTheme on
+ * <html>) overrides them. Radii and motion are theme-independent, so
+ * they're declared once in :root only.
  */
 :root {
   --background-primary: 9 9 11;
@@ -29,6 +34,22 @@
   --radius-dialog: 24px;
   --radius-widget: 20px;
   --radius-dock: 999px;
+}
+
+:root[data-theme="light"] {
+  --background-primary: 247 247 248;
+  --background-secondary: 239 239 241;
+  --surface: 255 255 255;
+  --surface-hover: 241 241 243;
+  --accent-primary: 59 130 246;
+  --accent-secondary: 139 92 246;
+  --success: 34 197 94;
+  --warning: 245 158 11;
+  --danger: 239 68 68;
+  --information: 6 182 212;
+  --text-primary: 9 9 11;
+  --text-secondary: 82 82 91;
+  --border: rgba(0, 0, 0, 0.08);
 }
 
 * {

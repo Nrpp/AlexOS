@@ -1,4 +1,4 @@
-import type { AppConfig, SystemHealth } from "@alexos/types";
+import type { AppConfig, Notification, SystemHealth } from "@alexos/types";
 
 export class ApiError extends Error {
   constructor(
@@ -21,6 +21,10 @@ export class ApiClient {
 
   async getConfig(): Promise<AppConfig> {
     return this.request<AppConfig>("/api/v1/config");
+  }
+
+  async getNotifications(): Promise<Notification[]> {
+    return this.request<Notification[]>("/api/v1/notifications");
   }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {

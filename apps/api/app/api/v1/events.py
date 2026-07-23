@@ -38,6 +38,13 @@ async def events_websocket(websocket: WebSocket) -> None:
             logger.debug("Dropped event send to a closed socket (client %s)", client_id)
 
     unsubscribe = event_bus.subscribe("*", forward)
+
+    # Replay the latest known reading of every event so this client sees
+    # current state immediately, rather than waiting for the next tick
+    # of whichever module last published it.
+    for envelope in event_bus.get_all_last():
+        await forward(envelope)
+
     await event_bus.publish("core.connected", {"clientId": client_id}, source="api")
 
     try:

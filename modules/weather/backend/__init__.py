@@ -31,7 +31,9 @@ async def _tick_forever(event_bus: EventBus, interval_seconds: float) -> None:
     while True:
         try:
             reading = await provider.read()
-            await event_bus.publish("weather.updated", reading_to_payload(reading), source="weather")
+            await event_bus.publish(
+                "weather.updated", reading_to_payload(reading), source="weather", retain=True
+            )
         except Exception:
             logger.exception("Failed to fetch weather")
         await asyncio.sleep(interval_seconds)
