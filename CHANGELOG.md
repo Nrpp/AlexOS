@@ -28,20 +28,42 @@ All notable changes to AlexOS are documented in this file.
 - Media module (`modules/media`): mock player with real play/pause/skip/
   previous controls and a live progress bar, `media.updated` event.
   Powers the Media page.
-- AI module (`modules/ai`): scripted keyword-matched replies - explicitly
-  not a real language model, labeled as such in the UI. Powers the AI page.
 - Room module (`modules/room`): in-memory lights with per-light toggles
   and Focus/Sleep/Morning scenes, `room.updated` event. Powers the Room page.
-- Finance module (`modules/finance`): expenses seeded from `config.json`
-  against a monthly budget. Powers the Finance page.
-- Every planned page now has a module except Vehicle, which the spec
-  never actually details (Part 2 lists it, Part 5 never describes it).
 - `ModuleWidgetPage` (`apps/web/src/components/ModuleWidgetPage.tsx`):
   shared "page is one module's widget, or an honest empty state"
   component, replacing per-page duplication.
 - Widget prop contract extended with `apiBaseUrl` alongside `eventBus`,
   for widgets that need an initial REST read or to write data back.
 - Main content area widened to 90rem (`apps/web/src/layout/AppShell.tsx`).
+
+### Removed
+
+- AI module (`modules/ai`) and its page - a scripted keyword matcher
+  wasn't worth keeping as a placeholder for "AI."
+- Finance module (`modules/finance`) and its page.
+- Vehicle page - never had a module; the spec never actually details
+  what it should contain (Part 2 lists it, Part 5 never describes it).
+
+### Fixed
+
+- **Critical, app-wide:** `tailwind.config.ts` redefined spacing keys
+  `1`-`8` to the design system's pixel scale (`{1: "8px", ... 8: "64px"}`),
+  which collided with Tailwind's own built-in keys `1`-`8` (`7` normally
+  means 28px, not 48px, etc.) and silently corrupted every `p-*`/`m-*`/
+  `gap-*`/`w-*`/`h-*`/`translate-*` utility using those key numbers with
+  their standard Tailwind meaning - nearly every component in the app,
+  since Tailwind classes were written assuming normal semantics. Removed
+  the override entirely; Tailwind's default scale already produces the
+  same pixel values at different (non-colliding) key numbers. See
+  `docs/DESIGN_SYSTEM.md`'s Spacing section for the correct mapping and
+  why not to reintroduce this.
+- `Toggle` (`packages/ui/src/components/Toggle.tsx`): redesigned with a
+  bordered track, a shadowed thumb, and keyboard focus styling, now that
+  its dimensions are no longer corrupted by the bug above.
+- Settings' dark-theme toggle silently did nothing when switched to
+  "light" (no light theme exists yet) - now disabled with honest copy
+  instead of looking broken.
 
 ## [0.0.1] - Foundation
 

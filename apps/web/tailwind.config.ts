@@ -50,16 +50,6 @@ export default {
         body: "1rem",
         caption: "0.875rem",
       },
-      spacing: {
-        1: "8px",
-        2: "12px",
-        3: "16px",
-        4: "20px",
-        5: "24px",
-        6: "32px",
-        7: "48px",
-        8: "64px",
-      },
       transitionDuration: {
         fast: "150ms",
         base: "200ms",

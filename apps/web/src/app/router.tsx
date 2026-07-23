@@ -11,10 +11,7 @@ const ServersPage = lazy(() => import("../pages/Servers"));
 const NetworkPage = lazy(() => import("../pages/Network"));
 const CommunicationPage = lazy(() => import("../pages/Communication"));
 const MediaPage = lazy(() => import("../pages/Media"));
-const AIPage = lazy(() => import("../pages/AI"));
 const RoomPage = lazy(() => import("../pages/Room"));
-const FinancePage = lazy(() => import("../pages/Finance"));
-const VehiclePage = lazy(() => import("../pages/Vehicle"));
 const SettingsPage = lazy(() => import("../pages/Settings"));
 
 export const router = createBrowserRouter([
@@ -27,10 +24,7 @@ export const router = createBrowserRouter([
       { path: "/network", element: <NetworkPage /> },
       { path: "/communication", element: <CommunicationPage /> },
       { path: "/media", element: <MediaPage /> },
-      { path: "/ai", element: <AIPage /> },
       { path: "/room", element: <RoomPage /> },
-      { path: "/finance", element: <FinancePage /> },
-      { path: "/vehicle", element: <VehiclePage /> },
       { path: "/settings", element: <SettingsPage /> },
     ],
   },

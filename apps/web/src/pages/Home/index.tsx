@@ -23,12 +23,11 @@ const GREETINGS: Record<ReturnType<typeof getDayPart>, string> = {
 };
 
 // weather/calendar/tasks have dedicated cards on Home below; every other
-// installed module (study, servers, network, communication, media, ai,
-// room, finance) has its own page from the Dock. Excluded here so
-// nothing renders twice, and so Home doesn't turn into a dump of every
-// installed widget - "clock" is the only one left with no other home.
-// A real "favorite" picker is future work; this is the honest default
-// until then.
+// installed module (study, servers, network, communication, media, room)
+// has its own page from the Dock. Excluded here so nothing renders
+// twice, and so Home doesn't turn into a dump of every installed widget
+// - "clock" is the only one left with no other home. A real "favorite"
+// picker is future work; this is the honest default until then.
 const DEDICATED_HOME_WIDGETS = new Set([
   "weather",
   "calendar",
@@ -38,9 +37,7 @@ const DEDICATED_HOME_WIDGETS = new Set([
   "network",
   "communication",
   "media",
-  "ai",
   "room",
-  "finance",
 ]);
 
 function Greeting() {

@@ -45,17 +45,20 @@ export const radii = {
   dock: "999px",
 } as const;
 
-/** Consistent spacing scale. Never use arbitrary spacing outside of this. */
-export const spacing = {
-  1: "8px",
-  2: "12px",
-  3: "16px",
-  4: "20px",
-  5: "24px",
-  6: "32px",
-  7: "48px",
-  8: "64px",
-} as const;
+/**
+ * Consistent spacing scale. Never use arbitrary spacing outside of this.
+ *
+ * These are values, not Tailwind key numbers - Tailwind's own default
+ * scale already produces every one of them (at `key * 0.25rem`), so
+ * Tailwind classes use its standard keys directly: p-2 (8px), p-3
+ * (12px), p-4 (16px), p-5 (20px), p-6 (24px), p-8 (32px), p-12 (48px),
+ * p-16 (64px). A tailwind.config.ts `spacing` override once redefined
+ * keys 1-8 to these same values, which silently collided with
+ * Tailwind's own keys 1-8 (different values) and corrupted sizing
+ * everywhere those keys were used with their normal Tailwind meaning -
+ * removed for that reason. Don't reintroduce it.
+ */
+export const spacing = [8, 12, 16, 20, 24, 32, 48, 64] as const;
 
 export const motion = {
   durationFast: 150,

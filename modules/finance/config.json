@@ -1,8 +1,0 @@
-{
-  "monthlyBudget": 1200,
-  "expenses": [
-    { "category": "Groceries", "amount": 240 },
-    { "category": "Transport", "amount": 80 },
-    { "category": "Subscriptions", "amount": 45 }
-  ]
-}

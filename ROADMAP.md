@@ -8,14 +8,16 @@ previous one without breaking it.
 Monorepo, Core, app shell, design system, module framework, one reference
 module, Docker for dev and production. No real integrations yet.
 
-## 0.1.0 — Every page has a module (in progress)
+## 0.1.0 — Foundation modules (done)
 
-Every planned page (except Vehicle - never detailed in the spec, see
-below) now has a module wired end-to-end (manifest → backend → Event
-Bus → widget), but every one of them runs on mock, simulated, or
-in-memory data rather than a real source. Each module's own README
-documents exactly what "going real" requires - that's the theme of
-every version below until it stops being true.
+Weather, Calendar, Tasks, Servers, Study, Network, Communication, Media,
+and Room all exist and are wired end-to-end (manifest → backend → Event
+Bus → widget), proving the module system on mock/simulated/in-memory
+data. AI and Finance were built the same way and then removed - they
+weren't worth keeping as scripted placeholders. Vehicle was never built
+at all: Part 2 of the spec lists it as a page but Part 5 never details
+what it should contain, and nothing else in the product spec fills that
+gap.
 
 - [x] `modules/clock` - the reference module, config-driven tick interval.
 - [x] `modules/weather` - mocked reading, `weather.updated` event.
@@ -26,18 +28,28 @@ every version below until it stops being true.
 - [x] `modules/network` - simulated devices/bandwidth/latency/IPs, `network.updated` event.
 - [x] `modules/communication` - mock inbox, simulated new mail, `mail.received` event.
 - [x] `modules/media` - mock player with real play/pause/skip controls, `media.updated` event.
-- [x] `modules/ai` - scripted keyword replies, explicitly not a real language model.
 - [x] `modules/room` - in-memory lights and Focus/Sleep/Morning scenes, `room.updated` event.
-- [x] `modules/finance` - expenses seeded from `config.json` against a budget.
-- [ ] Vehicle - no module, no page content. Part 2 of the spec lists it
-      as a page but Part 5 never details what it should contain; nothing
-      to build until that's actually specified.
 
-## 0.2.0 — Persistence and real telemetry
+## 0.2.0 — Real integrations (current focus)
+
+Replacing mock data with real accounts/services. Each needs its own
+external setup (a cloud console project, a developer account, a local
+token) before any code changes - see each module's README once started.
+
+- [ ] Google (Gmail, Calendar, Tasks) - one OAuth app covers all three;
+      replaces `modules/communication` and `modules/calendar`, and is a
+      new module for tasks synced from Google rather than staying
+      purely in-memory.
+- [ ] Apple Music - replaces `modules/media`'s mock player.
+- [ ] Home Assistant - powers `modules/room` for real, and is the
+      natural first step toward real `modules/servers`/`modules/network`
+      telemetry too.
+- [ ] Real weather API - replaces `modules/weather`'s mock provider.
+
+## 0.3.0 — Persistence and real telemetry
 
 - Persistent storage for module state (currently only Core
-  config/notifications use the Storage Manager; tasks, mail, media
-  position, and room state all reset on restart).
+  config/notifications use the Storage Manager).
 - Real Servers/Network telemetry - needs a deliberate decision about
   bind-mounting `/proc`/`/sys`/the disk device into the container (see
   `modules/servers/README.md` and `modules/network/README.md`).
@@ -45,23 +57,7 @@ every version below until it stops being true.
   new mail, task completed).
 - Docker container stats and restart actions on the Servers page.
 
-## 0.3.0 — Real external integrations
-
-- Real weather API.
-- Real calendar source (CalDAV/Google Calendar).
-- Gmail OAuth for Communication.
-- Spotify/Apple Music OAuth for Media.
-- Real smart-home connection (Home Assistant/Zigbee/Matter) for Room.
-- Real bank/card integration for Finance.
-
-## 0.4.0 — Real AI
-
-- Replace the AI module's scripted keyword matcher with an actual
-  language model call (local via something like Ollama, or a cloud
-  API) - credentials in `.env`, never in code.
-- Conversation history persisted, not just in-memory.
-
-## 0.5.0 — Automation & Plugins
+## 0.4.0 — Automation & Plugins
 
 - Automation Engine: triggers, conditions, actions, schedules, workflows.
 - Plugin installation/removal flow (copy folder → validate manifest →

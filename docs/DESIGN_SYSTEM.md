@@ -51,8 +51,20 @@ Inter, falling back to the system UI font. Scale: Display (3rem), Heading
 
 ## Spacing
 
-8, 12, 16, 20, 24, 32, 48, 64 - Tailwind spacing scale `1`–`8`. Never use
-an arbitrary spacing value outside this scale.
+8, 12, 16, 20, 24, 32, 48, 64px - Tailwind's own default scale already
+produces every one of these at `key × 0.25rem`, so use its standard
+keys directly: `p-2` (8px), `p-3` (12px), `p-4` (16px), `p-5` (20px),
+`p-6` (24px), `p-8` (32px), `p-12` (48px), `p-16` (64px). Never use an
+arbitrary spacing value outside this scale.
+
+**Do not** add a `spacing` override to `tailwind.config.ts` that
+redefines keys `1`-`8` to these pixel values - that collides with
+Tailwind's own keys `1`-`8` (which mean something else: `1`=4px, `7`=28px,
+etc.) and silently corrupts every `p-*`/`m-*`/`gap-*`/`w-*`/`h-*`/
+`translate-*` utility in that range wherever it's used with its normal
+Tailwind meaning. This happened once already and took a while to
+notice because it doesn't error, it just renders wrong - see git
+history around the `Toggle` component fix if you want the full story.
 
 ## Motion
 
