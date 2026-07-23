@@ -6,6 +6,14 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- Communication module (`modules/communication`) now supports viewing a
+  message's **full body**, not just the inbox list - `GET
+  /messages/{id}` fetches and parses Gmail's MIME payload
+  (`extract_body_text`, preferring `text/plain`, converting `text/html`
+  to readable plain text server-side rather than passing raw HTML to
+  the frontend) and marks it read as a side effect, like Gmail itself.
+  New `MessageViewerDialog` in the frontend opens on click. Covered by
+  `modules/communication/tests/test_body_extraction.py`.
 - Focus module (`modules/focus`): start/stop a timed focus session from
   the Study page or Home's "Start focus mode" quick action. Publishes
   `focus.started`/`focus.ended` (auto-ends and still fires if never

@@ -64,8 +64,10 @@ membership) in favor of Google Cast for Media.
       Status Bar and widgets don't show blank/stale data until the next tick.
 - [x] Automate getting Google/Home Assistant secrets onto the Raspberry
       Pi without ever putting them on GitHub (`scripts/configure_secrets.py`).
-- [ ] Full email viewing in `modules/communication` (read a message's
-      full body, not just the inbox list).
+- [x] Full email viewing in `modules/communication` - a message's full
+      body (not just the inbox snippet), rendered as plain text
+      (HTML-only messages are converted server-side, never sent to the
+      frontend as raw HTML).
 - [x] Multi-widget module support - the frontend registry
       (`apps/web/src/modules/registry.ts`) now collects every widget a
       module exports (default plus any named exports), not just one.

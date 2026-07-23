@@ -22,15 +22,28 @@ your `.env` on the Pi and restart the backend.
 ## What it does
 
 - **Backend** (`backend/`): `GET /api/v1/modules/communication/messages`
-  (10 most recent inbox messages via the Gmail API), `PATCH
-  /messages/{id}` (marks read via `gmail.modify`). `on_load(event_bus,
-  config)` polls every `config.json`'s `pollIntervalSeconds` (120s
-  default) and publishes `mail.received` for messages not seen in a
-  previous poll - the first poll after startup just establishes the
-  baseline, so you don't get ten "new mail" notifications the moment
-  the backend boots.
+  (10 most recent inbox messages via the Gmail API), `GET
+  /messages/{id}` (the full message - sender, subject, date, and body -
+  and marks it read as a side effect, matching Gmail's own "opening a
+  message marks it read" behavior). `on_load(event_bus, config)` polls
+  every `config.json`'s `pollIntervalSeconds` (120s default) and
+  publishes `mail.received` for messages not seen in a previous poll -
+  the first poll after startup just establishes the baseline, so you
+  don't get ten "new mail" notifications the moment the backend boots.
+- **Full message body** (`backend/state.py`'s `extract_body_text`):
+  Gmail's API returns a message as a MIME tree (often
+  `multipart/alternative` with both `text/plain` and `text/html`
+  parts). This walks that tree, preferring `text/plain`; if only HTML
+  is available, it's converted to plain text server-side (tags
+  stripped, entities decoded) rather than sent to the frontend as raw
+  HTML - avoids needing an HTML sanitizer library just to safely
+  display someone else's markup. Covered by
+  `tests/test_body_extraction.py` (simple, multipart, nested-multipart,
+  HTML-only, and empty-body cases) since there's no live Gmail account
+  in CI to exercise this against.
 - **Frontend** (`frontend/index.tsx`): a `CommunicationWidget` listing
-  messages, unread ones highlighted; tapping one marks it read. Shows a
+  messages, unread ones highlighted; clicking one opens
+  `MessageViewerDialog`, which fetches and shows the full body. Shows a
   clear "Gmail isn't connected" state if the OAuth env vars aren't set.
 
 ## Scope

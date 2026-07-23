@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, CardEmpty, CardLoading } from "@alexos/ui";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardSubtitle,
+  CardContent,
+  CardEmpty,
+  CardLoading,
+  Dialog,
+  DialogContent,
+} from "@alexos/ui";
 import { useEventBus, type EventBusLike } from "@alexos/hooks";
 
 interface Message {
@@ -15,14 +25,79 @@ interface MessagesResponse {
   messages: Message[];
 }
 
+interface FullMessage {
+  id: string;
+  sender: string;
+  subject: string;
+  date: string;
+  body: string;
+}
+
+interface MessageViewerDialogProps {
+  messageId: string | null;
+  apiBaseUrl?: string | undefined;
+  onClose: () => void;
+  onRead: () => void;
+}
+
+/** Fetches and displays a message's full body on demand - kept separate
+ * from the inbox list so opening one email doesn't cost every other
+ * item a re-render. Body arrives pre-rendered as plain text (the
+ * backend strips HTML server-side) rather than raw HTML, so there's no
+ * need for a sanitizer just to safely display someone else's markup. */
+function MessageViewerDialog({ messageId, apiBaseUrl, onClose, onRead }: MessageViewerDialogProps) {
+  const [message, setMessage] = useState<FullMessage | null>(null);
+
+  useEffect(() => {
+    if (!messageId || !apiBaseUrl) {
+      setMessage(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`${apiBaseUrl}/api/v1/modules/communication/messages/${messageId}`)
+      .then((response) => response.json())
+      .then((result: FullMessage) => {
+        if (!cancelled) setMessage(result);
+        onRead();
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messageId, apiBaseUrl]);
+
+  return (
+    <Dialog open={messageId !== null} onOpenChange={(open) => !open && onClose()}>
+      {messageId !== null ? (
+        <DialogContent
+          title={message?.subject || "Loading..."}
+          {...(message ? { description: `${message.sender} · ${message.date}` } : {})}
+          className="max-h-[80vh] w-[min(640px,90vw)] overflow-y-auto"
+        >
+          {message ? (
+            <p className="whitespace-pre-wrap text-body text-text-primary">{message.body || "(No body content.)"}</p>
+          ) : (
+            <CardLoading />
+          )}
+        </DialogContent>
+      ) : null}
+    </Dialog>
+  );
+}
+
 export interface CommunicationWidgetProps {
   eventBus?: EventBusLike | null;
   apiBaseUrl?: string;
 }
 
-/** Real inbox via Gmail - see the module README to connect yours. */
+/** Real inbox via Gmail - see the module README to connect yours.
+ * Clicking a message opens its full body (MessageViewerDialog), which
+ * also marks it read server-side - matching real Gmail's behavior of
+ * marking-as-read on open rather than needing a separate action. */
 export default function CommunicationWidget({ eventBus, apiBaseUrl }: CommunicationWidgetProps) {
   const [data, setData] = useState<MessagesResponse | null>(null);
+  const [openMessageId, setOpenMessageId] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     if (!apiBaseUrl) return;
@@ -37,12 +112,6 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
   }, [refresh]);
 
   useEventBus(eventBus, "mail.received", refresh);
-
-  const markRead = async (message: Message) => {
-    if (!apiBaseUrl || !message.unread) return;
-    await fetch(`${apiBaseUrl}/api/v1/modules/communication/messages/${message.id}`, { method: "PATCH" });
-    refresh();
-  };
 
   const unreadCount = data?.messages.filter((message) => message.unread).length ?? 0;
 
@@ -72,7 +141,7 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
               <li key={message.id}>
                 <button
                   type="button"
-                  onClick={() => void markRead(message)}
+                  onClick={() => setOpenMessageId(message.id)}
                   className="flex w-full items-start gap-2 text-left"
                 >
                   <span
@@ -93,6 +162,13 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
           </ul>
         </CardContent>
       )}
+
+      <MessageViewerDialog
+        messageId={openMessageId}
+        apiBaseUrl={apiBaseUrl}
+        onClose={() => setOpenMessageId(null)}
+        onRead={refresh}
+      />
     </Card>
   );
 }

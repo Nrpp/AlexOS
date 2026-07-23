@@ -3,7 +3,7 @@ from __future__ import annotations
 import httpx
 from fastapi import APIRouter, HTTPException
 
-from .state import list_recent_messages, mark_read, message_to_payload
+from .state import fetch_full_message, full_message_to_payload, list_recent_messages, mark_read, message_to_payload
 
 router = APIRouter()
 
@@ -17,6 +17,21 @@ async def get_messages() -> dict:
     if messages is None:
         return {"configured": False, "messages": []}
     return {"configured": True, "messages": [message_to_payload(message) for message in messages]}
+
+
+@router.get("/messages/{message_id}")
+async def get_message(message_id: str) -> dict:
+    try:
+        message = await fetch_full_message(message_id)
+    except httpx.HTTPError as error:
+        raise HTTPException(status_code=503, detail="Couldn't reach Gmail.") from error
+    if message is None:
+        raise HTTPException(status_code=404, detail="Gmail isn't configured, or the message wasn't found.")
+    try:
+        await mark_read(message_id)
+    except httpx.HTTPError:
+        pass  # best-effort - viewing the message should still succeed even if marking read fails
+    return full_message_to_payload(message)
 
 
 @router.patch("/messages/{message_id}")
