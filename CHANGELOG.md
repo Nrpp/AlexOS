@@ -6,6 +6,15 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- Weather module (`modules/weather`) now uses **real data** from
+  Open-Meteo (no API key required) instead of a mock provider - edit
+  `modules/weather/config.json`'s `latitude`/`longitude` to your location.
+- Room module (`modules/room`) now uses **real data** from a Home
+  Assistant instance instead of in-memory lights - the first module to
+  read a secret (`HA_BASE_URL`/`HA_ACCESS_TOKEN`) from the environment
+  rather than `config.json`. See `modules/room/README.md` for setup.
+  `docs/MODULES.md` documents this secrets-vs-config pattern for future
+  modules.
 - Module contract extended: `on_load(event_bus, config)` now also
   receives the module's parsed `config.json` (`{}` if missing/invalid) -
   `clock`'s tick interval is now configurable instead of hardcoded.

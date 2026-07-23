@@ -1,6 +1,3 @@
 {
-  "lights": [
-    { "id": "ceiling", "name": "Ceiling", "on": true, "brightness": 80 },
-    { "id": "desk", "name": "Desk Lamp", "on": false, "brightness": 60 }
-  ]
+  "lightEntityIds": ["light.living_room", "light.desk_lamp"]
 }

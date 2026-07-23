@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, Toggle, Button, CardLoading } from "@alexos/ui";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardEmpty, CardLoading, Toggle, Button } from "@alexos/ui";
 import { useEventBus, type EventBusLike } from "@alexos/hooks";
 
 interface Light {
@@ -7,6 +7,11 @@ interface Light {
   name: string;
   on: boolean;
   brightness: number;
+}
+
+interface LightsResponse {
+  configured: boolean;
+  lights: Light[];
 }
 
 export interface RoomWidgetProps {
@@ -20,16 +25,16 @@ const SCENES: { name: string; label: string; icon: string }[] = [
   { name: "morning", label: "Morning", icon: "wb_twilight" },
 ];
 
-/** In-memory lights for now - see the module README for what going real needs. */
+/** Real lights via Home Assistant - see the module README to connect yours. */
 export default function RoomWidget({ eventBus, apiBaseUrl }: RoomWidgetProps) {
-  const [lights, setLights] = useState<Light[] | null>(null);
+  const [data, setData] = useState<LightsResponse | null>(null);
 
   const refresh = useCallback(() => {
     if (!apiBaseUrl) return;
     fetch(`${apiBaseUrl}/api/v1/modules/room/lights`)
       .then((response) => response.json())
-      .then((data: Light[]) => setLights(data))
-      .catch(() => setLights((current) => current ?? []));
+      .then((result: LightsResponse) => setData(result))
+      .catch(() => undefined);
   }, [apiBaseUrl]);
 
   useEffect(() => {
@@ -66,11 +71,18 @@ export default function RoomWidget({ eventBus, apiBaseUrl }: RoomWidgetProps) {
         <CardTitle>Room</CardTitle>
       </CardHeader>
 
-      {lights === null ? (
+      {data === null ? (
         <CardLoading />
+      ) : !data.configured ? (
+        <CardEmpty
+          icon="home"
+          message="Home Assistant isn't connected yet - see modules/room/README.md."
+        />
+      ) : data.lights.length === 0 ? (
+        <CardEmpty icon="lightbulb" message="No lights configured yet - add entity IDs to modules/room/config.json." />
       ) : (
         <CardContent className="flex flex-col gap-3">
-          {lights.map((light) => (
+          {data.lights.map((light) => (
             <div key={light.id} className="flex items-center justify-between">
               <div>
                 <p className="text-body text-text-primary">{light.name}</p>
@@ -82,16 +94,18 @@ export default function RoomWidget({ eventBus, apiBaseUrl }: RoomWidgetProps) {
         </CardContent>
       )}
 
-      <CardFooter className="justify-start gap-2">
-        {SCENES.map((scene) => (
-          <Button key={scene.name} variant="secondary" onClick={() => void applyScene(scene.name)}>
-            <span className="material-symbols-rounded text-lg" aria-hidden>
-              {scene.icon}
-            </span>
-            {scene.label}
-          </Button>
-        ))}
-      </CardFooter>
+      {data?.configured ? (
+        <CardFooter className="justify-start gap-2">
+          {SCENES.map((scene) => (
+            <Button key={scene.name} variant="secondary" onClick={() => void applyScene(scene.name)}>
+              <span className="material-symbols-rounded text-lg" aria-hidden>
+                {scene.icon}
+              </span>
+              {scene.label}
+            </Button>
+          ))}
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }

@@ -2,7 +2,7 @@
   "name": "room",
   "version": "0.1.0",
   "author": "AlexOS",
-  "description": "Lights and scenes - in-memory for now, see README for what a real Home Assistant connection needs.",
+  "description": "Lights and scenes via a real Home Assistant instance - see README for setup (HA_BASE_URL/HA_ACCESS_TOKEN).",
   "permissions": [],
   "dependencies": [],
   "routes": ["/lights", "/scenes"],

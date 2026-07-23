@@ -1,5 +1,7 @@
 {
-  "location": "Home",
+  "latitude": 40.4168,
+  "longitude": -3.7038,
+  "location": "Madrid",
   "units": "metric",
-  "tickIntervalSeconds": 300
+  "tickIntervalSeconds": 900
 }

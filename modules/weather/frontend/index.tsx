@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, CardLoading } from "@alexos/ui";
+import { useCallback, useEffect, useState } from "react";
+import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, CardLoading, CardError } from "@alexos/ui";
 import { useEventBus, type EventBusLike } from "@alexos/hooks";
 import { capitalize } from "@alexos/utils";
 
@@ -22,25 +22,31 @@ function unitSuffix(units: string): string {
   return units === "imperial" ? "°F" : "°C";
 }
 
-/** Reads on mount, then updates live from `weather.updated`. Backend data is mocked for now - see the module README. */
+/** Real weather via Open-Meteo - see the module README to set your location. */
 export default function WeatherWidget({ eventBus, apiBaseUrl }: WeatherWidgetProps) {
   const [reading, setReading] = useState<WeatherReading | null>(null);
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
+  const fetchReading = useCallback(() => {
     if (!apiBaseUrl) return;
-    let cancelled = false;
+    setFailed(false);
     fetch(`${apiBaseUrl}/api/v1/modules/weather/current`)
-      .then((response) => response.json())
-      .then((data: WeatherReading) => {
-        if (!cancelled) setReading(data);
+      .then((response) => {
+        if (!response.ok) throw new Error("weather request failed");
+        return response.json() as Promise<WeatherReading>;
       })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
+      .then((data) => setReading(data))
+      .catch(() => setFailed(true));
   }, [apiBaseUrl]);
 
-  useEventBus(eventBus, "weather.updated", (payload) => setReading(payload as WeatherReading));
+  useEffect(() => {
+    fetchReading();
+  }, [fetchReading]);
+
+  useEventBus(eventBus, "weather.updated", (payload) => {
+    setFailed(false);
+    setReading(payload as WeatherReading);
+  });
 
   return (
     <Card>
@@ -54,8 +60,10 @@ export default function WeatherWidget({ eventBus, apiBaseUrl }: WeatherWidgetPro
         <CardTitle>Weather</CardTitle>
         <CardSubtitle>{reading?.location ?? "Local conditions"}</CardSubtitle>
       </CardHeader>
-      <CardContent>
-        {reading ? (
+      {failed && !reading ? (
+        <CardError message="We couldn't reach the weather service." onRetry={fetchReading} />
+      ) : reading ? (
+        <CardContent>
           <div className="flex items-baseline gap-3">
             <span className="text-heading font-semibold">
               {Math.round(reading.temperature)}
@@ -66,10 +74,10 @@ export default function WeatherWidget({ eventBus, apiBaseUrl }: WeatherWidgetPro
               {Math.round(reading.low)}&deg;
             </span>
           </div>
-        ) : (
-          <CardLoading />
-        )}
-      </CardContent>
+        </CardContent>
+      ) : (
+        <CardLoading />
+      )}
     </Card>
   );
 }

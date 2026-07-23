@@ -2,7 +2,7 @@
   "name": "weather",
   "version": "0.1.0",
   "author": "AlexOS",
-  "description": "Current conditions and today's high/low - mocked for now, swap the provider for a real API later.",
+  "description": "Current conditions and today's high/low via Open-Meteo - real data, no API key required.",
   "permissions": [],
   "dependencies": [],
   "routes": ["/current"],

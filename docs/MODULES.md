@@ -86,10 +86,16 @@ write data back (like `tasks`).
 4. If the module needs configuration (a poll interval, a location, seed
    data), put it in `config.json` and read it from the `config` dict
    `on_load` receives - never hardcode a value that belongs there.
-5. If the module has a widget, export a default component from
+5. If the module needs a secret (an API token, a base URL for a private
+   instance), read it from the environment directly (`os.environ`) -
+   never put it in `config.json`, which is committed to git. Document
+   the expected variable names in the module's own README and add them
+   (empty) to the repo root's `.env.example`. See `modules/room` for the
+   pattern (`HA_BASE_URL`/`HA_ACCESS_TOKEN`).
+6. If the module has a widget, export a default component from
    `frontend/index.tsx` using `@alexos/ui`, `@alexos/hooks`, and
    `@alexos/utils` rather than rebuilding primitives.
-6. Add a test under `tests/`.
+7. Add a test under `tests/`.
 
 No router file, no `package.json` entry, no manual wiring anywhere else
 in the repo - restart the backend (or let `--reload` pick it up in dev)

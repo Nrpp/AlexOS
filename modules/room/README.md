@@ -1,28 +1,48 @@
 # Room
 
-Powers the Room page's lights and scenes card.
+Powers the Room page's lights and scenes card. **Real data** via a
+Home Assistant instance you already run.
+
+## Setup
+
+1. In Home Assistant: **Profile** (click your name, bottom left) →
+   scroll to **Long-Lived Access Tokens** → **Create Token**. Copy it -
+   HA only shows it once.
+2. Add to your own `.env` on the Pi (never commit this file, never
+   paste the token anywhere else):
+
+   ```bash
+   HA_BASE_URL=http://homeassistant.local:8123
+   HA_ACCESS_TOKEN=<the token you just generated>
+   ```
+
+3. Find your lights' entity IDs: HA → **Developer Tools** → **States**,
+   filter for `light.`. Edit `modules/room/config.json`:
+
+   ```json
+   { "lightEntityIds": ["light.living_room", "light.desk_lamp"] }
+   ```
+
+4. Restart the backend (`docker compose ... up -d --build` or your dev
+   server).
 
 ## What it does
 
-- **Backend** (`backend/`): `GET /api/v1/modules/room/lights`,
-  `PATCH /lights/{id}` (`{ "on"?: bool, "brightness"?: 0-100 }`),
-  `POST /scenes/{name}` (`focus` / `sleep` / `morning`) - all publish
-  `room.updated`. `on_load(event_bus, config)` seeds lights from
-  `config.json`.
+- **Backend** (`backend/`): `GET /api/v1/modules/room/lights` (real
+  state from HA), `PATCH /lights/{entity_id}` (`{ "on"?, "brightness"? }`,
+  calls HA's `light.turn_on`/`light.turn_off` services), `POST
+  /scenes/{name}` (`focus`/`sleep`/`morning` - AlexOS-side presets
+  applied to each configured light directly, not HA scene entities, so
+  there's nothing to pre-create in HA). All publish `room.updated`.
 - **Frontend** (`frontend/index.tsx`): a `RoomWidget` with per-light
-  toggles and three scene buttons.
+  toggles and three scene buttons. Shows a clear "Home Assistant isn't
+  connected" state (not a blank card) if `HA_BASE_URL`/`HA_ACCESS_TOKEN`
+  aren't set yet.
 
-## In-memory, and why
+## Secrets vs. configuration
 
-There's no real Home Assistant/Zigbee/Matter connection here - that's a
-hardware and protocol integration, not something to fake convincingly
-with mock data the way weather or calendar can be. `backend/state.py`
-holds lights seeded from `config.json` and mutates them directly.
-Going real means replacing the in-memory dict with calls to a real hub's
-API; the router, event, and widget don't need to change, since they
-only ever see `{ id, name, on, brightness }`.
-
-## Configuration
-
-`config.json`'s `lights` - each entry is
-`{ "id": "...", "name": "...", "on": bool, "brightness": 0-100 }`.
+`HA_BASE_URL` and `HA_ACCESS_TOKEN` are read from the environment
+(`os.environ`), never from `config.json` - `config.json` is committed to
+git and is for non-secret configuration only (which lights to show).
+This is the pattern for any module needing credentials: read them from
+the environment, never commit them. See `.env.example` at the repo root.

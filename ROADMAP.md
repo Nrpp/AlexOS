@@ -35,16 +35,23 @@ gap.
 Replacing mock data with real accounts/services. Each needs its own
 external setup (a cloud console project, a developer account, a local
 token) before any code changes - see each module's README once started.
+Apple Music was considered and dropped (no Apple Developer Program
+membership) in favor of Google Cast for Media.
 
+- [x] Weather (`modules/weather`) - real data via Open-Meteo, no API key needed.
+- [x] Room (`modules/room`) - real lights via Home Assistant's REST API
+      (`HA_BASE_URL`/`HA_ACCESS_TOKEN`), the first module reading a
+      secret from the environment rather than `config.json`.
 - [ ] Google (Gmail, Calendar, Tasks) - one OAuth app covers all three;
       replaces `modules/communication` and `modules/calendar`, and is a
       new module for tasks synced from Google rather than staying
       purely in-memory.
-- [ ] Apple Music - replaces `modules/media`'s mock player.
-- [ ] Home Assistant - powers `modules/room` for real, and is the
-      natural first step toward real `modules/servers`/`modules/network`
-      telemetry too.
-- [ ] Real weather API - replaces `modules/weather`'s mock provider.
+- [ ] Google Cast - discover what's playing on cast devices on the LAN
+      and show a minimal now-playing display, replacing `modules/media`'s
+      mock player. Needs a decision about mDNS/multicast discovery
+      requiring host network mode in Docker - the same class of
+      container-privilege tradeoff as real Servers/Network telemetry
+      below, not something to enable by default.
 
 ## 0.3.0 — Persistence and real telemetry
 
