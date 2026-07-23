@@ -1,0 +1,17 @@
+{
+  "name": "AlexOS",
+  "short_name": "AlexOS",
+  "description": "The personal operating system.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090B",
+  "theme_color": "#09090B",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

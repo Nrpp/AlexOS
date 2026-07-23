@@ -1,0 +1,16 @@
+# Development image: dependencies installed at build time, source
+# bind-mounted by docker-compose.dev.yml so Vite's dev server hot-reloads
+# without a rebuild. Build context is the repo root.
+FROM node:20-alpine
+WORKDIR /repo
+
+COPY package.json ./
+COPY packages ./packages
+COPY apps/web ./apps/web
+RUN npm install
+
+WORKDIR /repo/apps/web
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host"]

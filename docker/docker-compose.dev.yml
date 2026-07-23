@@ -1,0 +1,56 @@
+# Development. From the repo root:
+#   docker compose -f docker/docker-compose.dev.yml up
+# Source is bind-mounted into both containers so Vite and uvicorn hot
+# reload without a rebuild. Rebuild only when a dependency changes.
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile.dev
+    env_file:
+      - ../.env
+    environment:
+      ALEXOS_ENV: development
+      # In-container layout doesn't mirror the repo's relative structure
+      # (modules/ isn't three parents up from app/settings.py in here),
+      # so point ModuleManager at the bind-mounted modules folder explicitly.
+      ALEXOS_MODULES_DIR: /srv/modules
+    volumes:
+      - ../apps/api:/srv/api
+      - ../modules:/srv/modules
+    ports:
+      - "8000:8000"
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+        "--reload-dir",
+        "/srv/api",
+        "--reload-dir",
+        "/srv/modules",
+      ]
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile.dev
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+      VITE_WS_BASE_URL: ws://localhost:8000
+    volumes:
+      - ../apps/web:/repo/apps/web
+      - ../packages:/repo/packages
+      - ../modules:/repo/modules
+      - web_node_modules:/repo/apps/web/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+volumes:
+  web_node_modules:

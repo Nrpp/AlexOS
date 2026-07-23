@@ -1,0 +1,17 @@
+{
+  "name": "@alexos/core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@alexos/types": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}

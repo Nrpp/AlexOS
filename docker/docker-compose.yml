@@ -1,0 +1,31 @@
+# Production. One command from the repo root:
+#   docker compose -f docker/docker-compose.yml up -d
+# Build contexts are the repo root so npm/pip can see the monorepo's
+# shared packages and the modules/ directory.
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      ALEXOS_CORS_ORIGINS: ${ALEXOS_CORS_ORIGINS:-http://localhost}
+    ports:
+      - "8000:8000"
+    volumes:
+      - alexos_data:/srv/api/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  alexos_data:

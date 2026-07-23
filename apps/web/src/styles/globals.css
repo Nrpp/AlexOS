@@ -1,0 +1,76 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Design tokens - the rendering source of truth. Mirrored as typed
+ * constants in packages/config/src/theme.ts for use in plain JS/TS
+ * (Framer Motion durations, etc). Keep both in sync when a token changes.
+ */
+:root {
+  --background-primary: 9 9 11;
+  --background-secondary: 17 17 19;
+  --surface: 24 24 27;
+  --surface-hover: 34 34 38;
+  --accent-primary: 59 130 246;
+  --accent-secondary: 139 92 246;
+  --success: 34 197 94;
+  --warning: 245 158 11;
+  --danger: 239 68 68;
+  --information: 6 182 212;
+  --text-primary: 255 255 255;
+  --text-secondary: 161 161 170;
+  --border: rgba(255, 255, 255, 0.08);
+
+  --radius-button: 14px;
+  --radius-card: 20px;
+  --radius-dialog: 24px;
+  --radius-widget: 20px;
+  --radius-dock: 999px;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-background-primary text-text-primary antialiased;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  overscroll-behavior: none;
+}
+
+/* Momentum scrolling on touch, no visible scrollbars unless necessary. */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.material-symbols-rounded {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

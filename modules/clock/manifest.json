@@ -1,0 +1,17 @@
+{
+  "name": "clock",
+  "version": "0.0.1",
+  "author": "AlexOS",
+  "description": "Shows the current time and date, ticking live over the Core Event Bus.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/time"],
+  "widgets": [
+    {
+      "id": "clock",
+      "name": "Clock",
+      "description": "Live time and date, pushed by the backend every second."
+    }
+  ],
+  "icon": "schedule"
+}
