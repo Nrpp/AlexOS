@@ -15,6 +15,28 @@ All notable changes to AlexOS are documented in this file.
   rather than `config.json`. See `modules/room/README.md` for setup.
   `docs/MODULES.md` documents this secrets-vs-config pattern for future
   modules.
+- Shared Google OAuth token refresh (`apps/api/app/core/google_auth.py`)
+  and a one-time, dependency-free setup script
+  (`scripts/google_oauth_setup.py`) that mints a refresh token via a
+  normal browser consent flow - run once, then add the printed
+  `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`GOOGLE_REFRESH_TOKEN` to `.env`.
+- Communication module (`modules/communication`) now uses **real data**
+  from Gmail (`gmail.modify` scope) instead of a mock inbox - polls for
+  genuinely new mail and publishes `mail.received`.
+- Calendar module (`modules/calendar`) now uses **real data** from
+  Google Calendar (`calendar.readonly` scope) instead of `config.json`-
+  seeded events - computes "today" using a configurable IANA timezone
+  rather than the container's system clock, which commonly defaults to
+  UTC regardless of the host.
+- Tasks module (`modules/tasks`) now syncs with Google Tasks instead of
+  holding tasks in memory - create/complete both go through the real API.
+- `docker/docker-compose.yml`'s `api` service now runs with
+  `network_mode: host`, needed for a future Google Cast module's mDNS/
+  multicast device discovery (doesn't cross Docker's bridge network) -
+  a deliberate LAN-exposure tradeoff, not a default to copy elsewhere
+  without thinking about it again.
+- `.gitignore` now excludes `client_secret*.json`/`credentials.json`/
+  `token.json` unconditionally, regardless of where they land in the repo.
 - Module contract extended: `on_load(event_bus, config)` now also
   receives the module's parsed `config.json` (`{}` if missing/invalid) -
   `clock`'s tick interval is now configurable instead of hardcoded.

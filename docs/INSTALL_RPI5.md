@@ -133,6 +133,13 @@ docker compose -f docker/docker-compose.yml up -d --build
   too): change the `web` service's port mapping in
   `docker/docker-compose.yml` from `"80:80"` to something like
   `"8080:80"`, then visit `http://localhost:8080`.
+- **Port 8000 already in use**: the `api` service runs with
+  `network_mode: host` (needed for the media module's Cast device
+  discovery via mDNS, which doesn't cross Docker's bridge network), so
+  it binds directly to the host's port 8000 - there's no `ports:`
+  mapping left to remap. Free up port 8000, or change both the
+  `--port 8000` in `apps/api/Dockerfile`'s `CMD` and
+  `ALEXOS_API_PORT`/`VITE_API_BASE_URL` in `.env` to a different port.
 - **Containers won't start**: `docker compose -f docker/docker-compose.yml logs -f`
   shows both services' output.
 - **Blank/black screen on the touch display but the API/web respond over

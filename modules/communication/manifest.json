@@ -2,7 +2,7 @@
   "name": "communication",
   "version": "0.1.0",
   "author": "AlexOS",
-  "description": "Unread messages and quick previews - a mock inbox for now, see README for what a real Gmail connection needs.",
+  "description": "Unread messages and quick previews via Gmail - see README for setup (shares AlexOS's Google OAuth client).",
   "permissions": [],
   "dependencies": [],
   "routes": ["/messages"],

@@ -1,20 +1,12 @@
 from __future__ import annotations
 
+import httpx
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from app.models.schemas import CamelModel
-
-from .state import Task, create_task, list_tasks, set_completed
+from .state import create_task, list_tasks, set_completed, task_to_payload
 
 router = APIRouter()
-
-
-class TaskResponse(CamelModel):
-    id: str
-    title: str
-    completed: bool
-    created_at: str
 
 
 class CreateTaskRequest(BaseModel):
@@ -25,39 +17,39 @@ class UpdateTaskRequest(BaseModel):
     completed: bool
 
 
-def _to_response(task: Task) -> TaskResponse:
-    return TaskResponse(
-        id=task.id,
-        title=task.title,
-        completed=task.completed,
-        created_at=task.created_at.isoformat(),
-    )
-
-
 @router.get("/tasks")
-async def get_tasks() -> list[TaskResponse]:
-    return [_to_response(task) for task in list_tasks()]
+async def get_tasks() -> dict:
+    try:
+        tasks = await list_tasks()
+    except httpx.HTTPError as error:
+        raise HTTPException(status_code=503, detail="Couldn't reach Google Tasks.") from error
+    if tasks is None:
+        return {"configured": False, "tasks": []}
+    return {"configured": True, "tasks": [task_to_payload(task) for task in tasks]}
 
 
 @router.post("/tasks", status_code=201)
-async def post_task(body: CreateTaskRequest, request: Request) -> TaskResponse:
-    task = create_task(body.title)
-    response = _to_response(task)
-    await request.app.state.event_bus.publish(
-        "task.created", response.model_dump(mode="json", by_alias=True), source="tasks"
-    )
-    return response
+async def post_task(body: CreateTaskRequest, request: Request) -> dict:
+    try:
+        task = await create_task(body.title)
+    except httpx.HTTPError as error:
+        raise HTTPException(status_code=503, detail="Couldn't reach Google Tasks.") from error
+    if task is None:
+        raise HTTPException(status_code=404, detail="Google Tasks isn't configured.")
+    payload = task_to_payload(task)
+    await request.app.state.event_bus.publish("task.created", payload, source="tasks")
+    return payload
 
 
 @router.patch("/tasks/{task_id}")
-async def patch_task(task_id: str, body: UpdateTaskRequest, request: Request) -> TaskResponse:
-    task = set_completed(task_id, body.completed)
+async def patch_task(task_id: str, body: UpdateTaskRequest, request: Request) -> dict:
+    try:
+        task = await set_completed(task_id, body.completed)
+    except httpx.HTTPError as error:
+        raise HTTPException(status_code=503, detail="Couldn't reach Google Tasks.") from error
     if task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    response = _to_response(task)
+        raise HTTPException(status_code=404, detail="Google Tasks isn't configured, or the task wasn't found.")
+    payload = task_to_payload(task)
     if body.completed:
-        await request.app.state.event_bus.publish(
-            "task.completed", response.model_dump(mode="json", by_alias=True), source="tasks"
-        )
-    return response
+        await request.app.state.event_bus.publish("task.completed", payload, source="tasks")
+    return payload

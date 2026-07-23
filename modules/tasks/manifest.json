@@ -2,7 +2,7 @@
   "name": "tasks",
   "version": "0.1.0",
   "author": "AlexOS",
-  "description": "Today's tasks, held in memory for now - add and complete them inline or from the Home page's Quick Actions.",
+  "description": "Today's tasks via Google Tasks - see README for setup (shares AlexOS's Google OAuth client).",
   "permissions": [],
   "dependencies": [],
   "routes": ["/tasks"],

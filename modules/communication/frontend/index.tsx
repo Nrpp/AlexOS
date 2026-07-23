@@ -8,7 +8,11 @@ interface Message {
   subject: string;
   snippet: string;
   unread: boolean;
-  receivedAt: string;
+}
+
+interface MessagesResponse {
+  configured: boolean;
+  messages: Message[];
 }
 
 export interface CommunicationWidgetProps {
@@ -16,16 +20,16 @@ export interface CommunicationWidgetProps {
   apiBaseUrl?: string;
 }
 
-/** Mock inbox for now - see the module README for what going real needs. */
+/** Real inbox via Gmail - see the module README to connect yours. */
 export default function CommunicationWidget({ eventBus, apiBaseUrl }: CommunicationWidgetProps) {
-  const [messages, setMessages] = useState<Message[] | null>(null);
+  const [data, setData] = useState<MessagesResponse | null>(null);
 
   const refresh = useCallback(() => {
     if (!apiBaseUrl) return;
     fetch(`${apiBaseUrl}/api/v1/modules/communication/messages`)
       .then((response) => response.json())
-      .then((data: Message[]) => setMessages(data))
-      .catch(() => setMessages((current) => current ?? []));
+      .then((result: MessagesResponse) => setData(result))
+      .catch(() => undefined);
   }, [apiBaseUrl]);
 
   useEffect(() => {
@@ -40,7 +44,7 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
     refresh();
   };
 
-  const unreadCount = messages?.filter((message) => message.unread).length ?? 0;
+  const unreadCount = data?.messages.filter((message) => message.unread).length ?? 0;
 
   return (
     <Card>
@@ -52,17 +56,19 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
         }
       >
         <CardTitle>Inbox</CardTitle>
-        <CardSubtitle>{unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}</CardSubtitle>
+        <CardSubtitle>{data?.configured ? (unreadCount > 0 ? `${unreadCount} unread` : "All caught up") : ""}</CardSubtitle>
       </CardHeader>
 
-      {messages === null ? (
+      {data === null ? (
         <CardLoading />
-      ) : messages.length === 0 ? (
+      ) : !data.configured ? (
+        <CardEmpty icon="mail" message="Gmail isn't connected yet - see modules/communication/README.md." />
+      ) : data.messages.length === 0 ? (
         <CardEmpty icon="mark_email_read" message="No messages." />
       ) : (
         <CardContent>
           <ul className="flex flex-col gap-3">
-            {messages.map((message) => (
+            {data.messages.map((message) => (
               <li key={message.id}>
                 <button
                   type="button"

@@ -2,7 +2,7 @@
   "name": "calendar",
   "version": "0.1.0",
   "author": "AlexOS",
-  "description": "Today's events, seeded from config.json for now - swap for a real calendar source (CalDAV, Google Calendar) later.",
+  "description": "Today's events via Google Calendar - see README for setup (shares AlexOS's Google OAuth client).",
   "permissions": [],
   "dependencies": [],
   "routes": ["/events/today"],

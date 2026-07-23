@@ -11,8 +11,15 @@ services:
       - ../.env
     environment:
       ALEXOS_CORS_ORIGINS: ${ALEXOS_CORS_ORIGINS:-http://localhost}
-    ports:
-      - "8000:8000"
+    # Host networking (Linux only - this is what the Pi runs) so
+    # modules/media can discover Cast devices via mDNS/multicast, which
+    # doesn't cross Docker's default bridge network. This gives the
+    # container full access to the LAN, same as any process running
+    # directly on the host - a deliberate tradeoff, not a default to
+    # copy elsewhere without thinking about it again. `ports:` is
+    # dropped because it's incompatible with network_mode: host - the
+    # container binds directly to the host's port 8000.
+    network_mode: host
     volumes:
       - alexos_data:/srv/api/data
     restart: unless-stopped

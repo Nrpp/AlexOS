@@ -1,7 +1,4 @@
 {
-  "events": [
-    { "time": "09:00", "title": "Team sync" },
-    { "time": "13:00", "title": "Lunch with Alex" },
-    { "time": "18:00", "title": "Gym" }
-  ]
+  "calendarId": "primary",
+  "timezone": "Europe/Madrid"
 }

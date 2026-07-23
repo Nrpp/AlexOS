@@ -17,7 +17,11 @@ interface Task {
   id: string;
   title: string;
   completed: boolean;
-  createdAt: string;
+}
+
+interface TasksResponse {
+  configured: boolean;
+  tasks: Task[];
 }
 
 export interface TasksWidgetProps {
@@ -25,18 +29,19 @@ export interface TasksWidgetProps {
   apiBaseUrl?: string;
 }
 
-/** Refetches on task.created/task.completed rather than patching local
- * state, so it stays correct no matter where a task was created. */
+/** Real tasks via Google Tasks - see the module README to connect
+ * yours. Refetches on task.created/task.completed rather than patching
+ * local state, so it stays correct no matter where a task was created. */
 export default function TasksWidget({ eventBus, apiBaseUrl }: TasksWidgetProps) {
-  const [tasks, setTasks] = useState<Task[] | null>(null);
+  const [data, setData] = useState<TasksResponse | null>(null);
   const [newTitle, setNewTitle] = useState("");
 
   const refresh = useCallback(() => {
     if (!apiBaseUrl) return;
     fetch(`${apiBaseUrl}/api/v1/modules/tasks/tasks`)
       .then((response) => response.json())
-      .then((data: Task[]) => setTasks(data))
-      .catch(() => setTasks((current) => current ?? []));
+      .then((result: TasksResponse) => setData(result))
+      .catch(() => undefined);
   }, [apiBaseUrl]);
 
   useEffect(() => {
@@ -84,14 +89,16 @@ export default function TasksWidget({ eventBus, apiBaseUrl }: TasksWidgetProps) 
         <CardTitle>Today&apos;s tasks</CardTitle>
       </CardHeader>
 
-      {tasks === null ? (
+      {data === null ? (
         <CardLoading />
-      ) : tasks.length === 0 ? (
+      ) : !data.configured ? (
+        <CardEmpty icon="task_alt" message="Google Tasks isn't connected yet - see modules/tasks/README.md." />
+      ) : data.tasks.length === 0 ? (
         <CardEmpty icon="task_alt" message="No upcoming tasks." />
       ) : (
         <CardContent>
           <ul className="flex flex-col gap-2">
-            {tasks.map((task) => (
+            {data.tasks.map((task) => (
               <li key={task.id} className="flex items-center gap-3">
                 <button
                   type="button"
@@ -118,19 +125,21 @@ export default function TasksWidget({ eventBus, apiBaseUrl }: TasksWidgetProps) 
         </CardContent>
       )}
 
-      <CardFooter className="justify-start gap-2">
-        <Input
-          value={newTitle}
-          onChange={(event) => setNewTitle(event.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Add a task..."
-          aria-label="New task title"
-          className="flex-1"
-        />
-        <Button variant="secondary" onClick={() => void addTask()}>
-          Add
-        </Button>
-      </CardFooter>
+      {data?.configured ? (
+        <CardFooter className="justify-start gap-2">
+          <Input
+            value={newTitle}
+            onChange={(event) => setNewTitle(event.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Add a task..."
+            aria-label="New task title"
+            className="flex-1"
+          />
+          <Button variant="secondary" onClick={() => void addTask()}>
+            Add
+          </Button>
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }

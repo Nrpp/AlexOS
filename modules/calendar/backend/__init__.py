@@ -1,5 +1,6 @@
-"""The calendar module's backend. Static seed data for this milestone -
-no tick loop needed since nothing changes on its own."""
+"""The calendar module's backend. Fetched fresh on every request - no
+background polling, since there's nothing to push without webhook
+support (a future improvement, not this pass)."""
 
 from __future__ import annotations
 
@@ -14,5 +15,5 @@ __all__ = ["router", "on_load"]
 
 
 def on_load(event_bus: EventBus, config: dict[str, Any]) -> None:
-    del event_bus  # No live source yet - nothing to publish.
+    del event_bus
     configure(config)
