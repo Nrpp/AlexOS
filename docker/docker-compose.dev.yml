@@ -18,6 +18,10 @@ services:
     volumes:
       - ../apps/api:/srv/api
       - ../modules:/srv/modules
+      # Same tradeoff as docker-compose.yml (production) - see its
+      # comment. Comment out if you don't want Servers' container
+      # features enabled in dev.
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8000:8000"
     command:

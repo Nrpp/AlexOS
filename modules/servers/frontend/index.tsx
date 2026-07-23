@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, CardLoading } from "@alexos/ui";
+import { useCallback, useEffect, useState } from "react";
+import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, CardEmpty, CardLoading, Button } from "@alexos/ui";
 import { useEventBus, type EventBusLike } from "@alexos/hooks";
 
 interface ServerStats {
@@ -100,6 +100,146 @@ export default function ServersWidget({ eventBus, apiBaseUrl }: ServersWidgetPro
         </CardContent>
       ) : (
         <CardLoading />
+      )}
+    </Card>
+  );
+}
+
+interface DockerContainer {
+  id: string;
+  name: string;
+  image: string;
+  state: string;
+  status: string;
+}
+
+interface ContainersResponse {
+  available: boolean;
+  containers: DockerContainer[];
+}
+
+export interface DockerContainersWidgetProps {
+  eventBus?: unknown;
+  apiBaseUrl?: string;
+}
+
+const STATE_DOT_CLASS: Record<string, string> = {
+  running: "bg-success",
+  exited: "bg-text-secondary",
+  paused: "bg-warning",
+};
+
+/** Real Docker containers via the host's Docker socket - see the module
+ * README for the security tradeoff that requires and why this can't be
+ * tested outside a Linux Docker host. */
+export function DockerContainersWidget({ apiBaseUrl }: DockerContainersWidgetProps) {
+  const [data, setData] = useState<ContainersResponse | null>(null);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+
+  const refresh = useCallback(() => {
+    if (!apiBaseUrl) return;
+    fetch(`${apiBaseUrl}/api/v1/modules/servers/containers`)
+      .then((response) => response.json())
+      .then((result: ContainersResponse) => setData(result))
+      .catch(() => undefined);
+  }, [apiBaseUrl]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const runAction = async (container: DockerContainer, action: "start" | "stop" | "restart") => {
+    if (!apiBaseUrl) return;
+    setPendingAction(container.id);
+    try {
+      await fetch(`${apiBaseUrl}/api/v1/modules/servers/containers/${container.id}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      refresh();
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader
+        icon={
+          <span className="material-symbols-rounded" aria-hidden>
+            deployed_code
+          </span>
+        }
+      >
+        <CardTitle>Docker containers</CardTitle>
+      </CardHeader>
+
+      {data === null ? (
+        <CardLoading />
+      ) : !data.available ? (
+        <CardEmpty
+          icon="dns"
+          message="Docker socket isn't mounted yet - see modules/servers/README.md."
+        />
+      ) : data.containers.length === 0 ? (
+        <CardEmpty icon="deployed_code" message="No containers found." />
+      ) : (
+        <CardContent>
+          <ul className="flex flex-col gap-3">
+            {data.containers.map((container) => (
+              <li key={container.id} className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className={`h-2 w-2 shrink-0 rounded-full ${STATE_DOT_CLASS[container.state] ?? "bg-text-secondary"}`}
+                    aria-hidden
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-body text-text-primary">{container.name}</p>
+                    <p className="truncate text-caption text-text-secondary">{container.status}</p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  {container.state === "running" ? (
+                    <>
+                      <Button
+                        variant="icon"
+                        disabled={pendingAction === container.id}
+                        onClick={() => void runAction(container, "restart")}
+                        aria-label={`Restart ${container.name}`}
+                      >
+                        <span className="material-symbols-rounded text-lg" aria-hidden>
+                          restart_alt
+                        </span>
+                      </Button>
+                      <Button
+                        variant="icon"
+                        disabled={pendingAction === container.id}
+                        onClick={() => void runAction(container, "stop")}
+                        aria-label={`Stop ${container.name}`}
+                      >
+                        <span className="material-symbols-rounded text-lg" aria-hidden>
+                          stop_circle
+                        </span>
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="icon"
+                      disabled={pendingAction === container.id}
+                      onClick={() => void runAction(container, "start")}
+                      aria-label={`Start ${container.name}`}
+                    >
+                      <span className="material-symbols-rounded text-lg" aria-hidden>
+                        play_circle
+                      </span>
+                    </Button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
       )}
     </Card>
   );

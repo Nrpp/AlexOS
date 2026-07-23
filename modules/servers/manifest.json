@@ -1,16 +1,21 @@
 {
   "name": "servers",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "AlexOS",
-  "description": "CPU, RAM, disk, and temperature - simulated for now. Real host telemetry needs a deliberate decision about container privileges, see README.",
+  "description": "CPU/RAM/disk/temperature (simulated) plus real Docker container list and controls.",
   "permissions": [],
   "dependencies": [],
-  "routes": ["/stats"],
+  "routes": ["/stats", "/containers"],
   "widgets": [
     {
       "id": "servers",
       "name": "Servers",
       "description": "CPU, RAM, disk, and temperature."
+    },
+    {
+      "id": "docker-containers",
+      "name": "Docker containers",
+      "description": "Real containers on the host, with start/stop/restart."
     }
   ],
   "icon": "dns"

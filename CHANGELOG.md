@@ -6,6 +6,17 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- Servers module (`modules/servers`) gained a **Docker containers**
+  widget: real container list + start/stop/restart via the Docker
+  Engine API over the host's `/var/run/docker.sock`, using httpx's
+  Unix-socket transport (no new SDK dependency). Requires bind-mounting
+  the socket into the `api` container (`docker/docker-compose.yml` and
+  `.dev.yml`) - documented as a deliberate, root-equivalent security
+  tradeoff acceptable only because this is a single-user personal
+  device. Can't be exercised on this Windows dev machine (no Docker
+  socket to mount) - only verifiable on Linux/the actual Pi; the
+  socket-unavailable path (`is_available()` returning false) is unit
+  tested and was verified live here.
 - Communication module (`modules/communication`) now supports viewing a
   message's **full body**, not just the inbox list - `GET
   /messages/{id}` fetches and parses Gmail's MIME payload

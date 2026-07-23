@@ -22,6 +22,15 @@ services:
     network_mode: host
     volumes:
       - alexos_data:/srv/api/data
+      # Lets modules/servers list and start/stop/restart Docker
+      # containers on the host (see modules/servers/README.md). This is
+      # a significant security tradeoff: anything with access to the
+      # Docker socket has root-equivalent control over the host - it
+      # can start a container with `-v /:/host` and read/write anything.
+      # Only acceptable here because this is a single-user personal
+      # device, not a shared or internet-facing host. Comment this line
+      # out if you'd rather keep Servers' container features disabled.
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
   web:

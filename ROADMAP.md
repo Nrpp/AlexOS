@@ -76,8 +76,15 @@ membership) in favor of Google Cast for Media.
       server-side via a new generic module-data table (`ModuleDataEntry`)
       on the Core Storage Manager, so a small module doesn't need its own
       SQL table just to remember a list across restarts.
-- [ ] Servers/Network/Communication need more than one sub-feature each -
-      needs a decision on which specific sub-features to build.
+- [x] Servers: real Docker container list + start/stop/restart, via the
+      host's `/var/run/docker.sock` bind-mounted into the `api`
+      container - a deliberate, root-equivalent security tradeoff (see
+      `modules/servers/README.md`). CPU/RAM/disk/temperature stay
+      simulated (separate decision, see 0.3.0).
+- [ ] Network: real device discovery (ARP + on-demand ping sweep),
+      on-demand speed test, and an honest look at why per-device
+      bandwidth isn't feasible from a Pi that isn't the LAN's gateway -
+      in progress.
 - [x] `modules/focus` - start/stop a focus session, publishes
       `focus.started`/`focus.ended` and fires outbound webhooks
       (`FOCUS_WEBHOOK_URLS`) so other devices can react. This is the
@@ -92,12 +99,12 @@ membership) in favor of Google Cast for Media.
 
 - Persistent storage for module state (currently only Core
   config/notifications use the Storage Manager).
-- Real Servers/Network telemetry - needs a deliberate decision about
-  bind-mounting `/proc`/`/sys`/the disk device into the container (see
-  `modules/servers/README.md` and `modules/network/README.md`).
+- Real Servers CPU/RAM/disk/temperature telemetry - needs a deliberate
+  decision about bind-mounting `/proc`/`/sys`/the disk device into the
+  container (see `modules/servers/README.md`). Docker container
+  list/controls shipped in 0.2.1 without needing this.
 - Notification Manager wired to real events (server online/offline,
   new mail, task completed).
-- Docker container stats and restart actions on the Servers page.
 
 ## 0.4.0 — Automation & Plugins
 
