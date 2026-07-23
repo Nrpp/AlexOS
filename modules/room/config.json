@@ -1,0 +1,6 @@
+{
+  "lights": [
+    { "id": "ceiling", "name": "Ceiling", "on": true, "brightness": 80 },
+    { "id": "desk", "name": "Desk Lamp", "on": false, "brightness": 60 }
+  ]
+}

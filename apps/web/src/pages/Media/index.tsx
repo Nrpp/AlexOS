@@ -1,12 +1,13 @@
-import { PagePlaceholder } from "../../components/PagePlaceholder";
+import { ModuleWidgetPage } from "../../components/ModuleWidgetPage";
 
 export default function MediaPage() {
   return (
-    <PagePlaceholder
+    <ModuleWidgetPage
       title="Media"
       description="Spotify, Apple Music, playback controls, and what's playing."
-      icon="music_note"
-      comingSoon="No player connected yet - Spotify is the first module planned here."
+      moduleName="media"
+      fallbackIcon="music_note"
+      fallbackMessage="No player connected yet - Spotify is the first module planned here."
     />
   );
 }

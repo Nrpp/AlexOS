@@ -1,0 +1,17 @@
+{
+  "name": "study",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "A Pomodoro focus timer - fully client-side, no backend needed.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "pomodoro",
+      "name": "Pomodoro",
+      "description": "Work/break focus timer."
+    }
+  ],
+  "icon": "timer"
+}

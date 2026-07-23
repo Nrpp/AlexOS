@@ -1,12 +1,13 @@
-import { PagePlaceholder } from "../../components/PagePlaceholder";
+import { ModuleWidgetPage } from "../../components/ModuleWidgetPage";
 
 export default function FinancePage() {
   return (
-    <PagePlaceholder
+    <ModuleWidgetPage
       title="Finance"
       description="Expenses, budgets, subscriptions, and spending charts."
-      icon="savings"
-      comingSoon="No accounts connected yet - expense tracking is on the roadmap."
+      moduleName="finance"
+      fallbackIcon="savings"
+      fallbackMessage="No accounts connected yet - expense tracking is on the roadmap."
     />
   );
 }

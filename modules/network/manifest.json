@@ -1,0 +1,17 @@
+{
+  "name": "network",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Connected devices, bandwidth, latency, and IP addresses - simulated for now, same reasons as the servers module.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/status"],
+  "widgets": [
+    {
+      "id": "network",
+      "name": "Network",
+      "description": "Connected devices, bandwidth, latency, and IPs."
+    }
+  ],
+  "icon": "lan"
+}

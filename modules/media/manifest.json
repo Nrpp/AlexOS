@@ -1,0 +1,17 @@
+{
+  "name": "media",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Now playing, with playback controls - a mock player for now, see README for what a real Spotify connection needs.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/now-playing", "/playback"],
+  "widgets": [
+    {
+      "id": "media",
+      "name": "Media",
+      "description": "Now playing, with playback controls."
+    }
+  ],
+  "icon": "music_note"
+}

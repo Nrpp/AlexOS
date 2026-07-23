@@ -18,6 +18,27 @@ All notable changes to AlexOS are documented in this file.
   card and the Quick Actions "Add task" button.
 - Servers module (`modules/servers`): simulated CPU/RAM/disk/temperature,
   `server.metrics` event, powers the Servers page.
+- Study module (`modules/study`): Pomodoro timer, fully client-side, no
+  backend - proves a module can be frontend-only. Powers the Study page.
+- Network module (`modules/network`): simulated devices/bandwidth/
+  latency/IPs, `network.updated` event. Powers the Network page.
+- Communication module (`modules/communication`): mock inbox, simulated
+  new mail arriving over time, `mail.received` event. Powers the
+  Communication page.
+- Media module (`modules/media`): mock player with real play/pause/skip/
+  previous controls and a live progress bar, `media.updated` event.
+  Powers the Media page.
+- AI module (`modules/ai`): scripted keyword-matched replies - explicitly
+  not a real language model, labeled as such in the UI. Powers the AI page.
+- Room module (`modules/room`): in-memory lights with per-light toggles
+  and Focus/Sleep/Morning scenes, `room.updated` event. Powers the Room page.
+- Finance module (`modules/finance`): expenses seeded from `config.json`
+  against a monthly budget. Powers the Finance page.
+- Every planned page now has a module except Vehicle, which the spec
+  never actually details (Part 2 lists it, Part 5 never describes it).
+- `ModuleWidgetPage` (`apps/web/src/components/ModuleWidgetPage.tsx`):
+  shared "page is one module's widget, or an honest empty state"
+  component, replacing per-page duplication.
 - Widget prop contract extended with `apiBaseUrl` alongside `eventBus`,
   for widgets that need an initial REST read or to write data back.
 - Main content area widened to 90rem (`apps/web/src/layout/AppShell.tsx`).

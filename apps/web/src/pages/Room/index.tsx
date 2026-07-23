@@ -1,12 +1,13 @@
-import { PagePlaceholder } from "../../components/PagePlaceholder";
+import { ModuleWidgetPage } from "../../components/ModuleWidgetPage";
 
 export default function RoomPage() {
   return (
-    <PagePlaceholder
+    <ModuleWidgetPage
       title="Room"
       description="Lights, music, timers, focus mode, and sleep and morning routines."
-      icon="living"
-      comingSoon="No smart home connected yet - lighting control is the first step planned here."
+      moduleName="room"
+      fallbackIcon="living"
+      fallbackMessage="No smart home connected yet - lighting control is the first step planned here."
     />
   );
 }

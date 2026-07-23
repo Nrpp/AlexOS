@@ -1,0 +1,17 @@
+{
+  "name": "communication",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Unread messages and quick previews - a mock inbox for now, see README for what a real Gmail connection needs.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/messages"],
+  "widgets": [
+    {
+      "id": "communication",
+      "name": "Inbox",
+      "description": "Unread messages and quick previews."
+    }
+  ],
+  "icon": "forum"
+}

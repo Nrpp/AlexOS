@@ -1,12 +1,13 @@
-import { PagePlaceholder } from "../../components/PagePlaceholder";
+import { ModuleWidgetPage } from "../../components/ModuleWidgetPage";
 
 export default function StudyPage() {
   return (
-    <PagePlaceholder
+    <ModuleWidgetPage
       title="Study"
       description="Pomodoro, exam countdowns, homework, and focus mode."
-      icon="school"
-      comingSoon="No study tools yet - Pomodoro and exam countdowns are next on the roadmap."
+      moduleName="study"
+      fallbackIcon="school"
+      fallbackMessage="No study tools yet - Pomodoro and exam countdowns are next on the roadmap."
     />
   );
 }

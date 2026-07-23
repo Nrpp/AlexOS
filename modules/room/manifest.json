@@ -1,0 +1,17 @@
+{
+  "name": "room",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Lights and scenes - in-memory for now, see README for what a real Home Assistant connection needs.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/lights", "/scenes"],
+  "widgets": [
+    {
+      "id": "room",
+      "name": "Room",
+      "description": "Lights, and Focus/Sleep/Morning scenes."
+    }
+  ],
+  "icon": "living"
+}

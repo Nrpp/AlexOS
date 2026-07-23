@@ -8,45 +8,58 @@ previous one without breaking it.
 Monorepo, Core, app shell, design system, module framework, one reference
 module, Docker for dev and production. No real integrations yet.
 
-## 0.1.0 — First modules (in progress)
+## 0.1.0 — Every page has a module (in progress)
 
-Weather, Calendar, Tasks, and Servers all exist and are wired end-to-end
-(manifest → backend → Event Bus → widget), but on mock or in-memory data
-rather than real sources - each module's README documents exactly what
-"going real" requires:
+Every planned page (except Vehicle - never detailed in the spec, see
+below) now has a module wired end-to-end (manifest → backend → Event
+Bus → widget), but every one of them runs on mock, simulated, or
+in-memory data rather than a real source. Each module's own README
+documents exactly what "going real" requires - that's the theme of
+every version below until it stops being true.
 
-- [x] Weather module (`modules/weather`) - mocked reading, `weather.updated` event.
-- [x] Calendar module (`modules/calendar`) - events seeded from `config.json`, no live source yet.
-- [x] Tasks module (`modules/tasks`) - in-memory, `task.created`/`task.completed` events, lost on restart.
-- [x] Servers module (`modules/servers`) - simulated CPU/RAM/disk/temperature, `server.metrics` event.
-- [ ] Real weather API integration.
-- [ ] Real calendar source (CalDAV/Google Calendar).
-- [ ] Persistent storage for tasks and module state (currently only
-      Core config/notifications use the Storage Manager).
-- [ ] Notification Manager wired to real events (server online/offline,
-      new mail, task completed).
-- [ ] Real host telemetry for Servers - needs a deliberate decision about
-      bind-mounting `/proc`/`/sys`/the disk device into the container
-      (see `modules/servers/README.md`).
+- [x] `modules/clock` - the reference module, config-driven tick interval.
+- [x] `modules/weather` - mocked reading, `weather.updated` event.
+- [x] `modules/calendar` - events seeded from `config.json`, no live source yet.
+- [x] `modules/tasks` - in-memory, `task.created`/`task.completed` events, lost on restart.
+- [x] `modules/servers` - simulated CPU/RAM/disk/temperature, `server.metrics` event.
+- [x] `modules/study` - Pomodoro timer, fully client-side, no backend.
+- [x] `modules/network` - simulated devices/bandwidth/latency/IPs, `network.updated` event.
+- [x] `modules/communication` - mock inbox, simulated new mail, `mail.received` event.
+- [x] `modules/media` - mock player with real play/pause/skip controls, `media.updated` event.
+- [x] `modules/ai` - scripted keyword replies, explicitly not a real language model.
+- [x] `modules/room` - in-memory lights and Focus/Sleep/Morning scenes, `room.updated` event.
+- [x] `modules/finance` - expenses seeded from `config.json` against a budget.
+- [ ] Vehicle - no module, no page content. Part 2 of the spec lists it
+      as a page but Part 5 never details what it should contain; nothing
+      to build until that's actually specified.
 
-## 0.2.0 — Network & real telemetry
+## 0.2.0 — Persistence and real telemetry
 
-- Network page: connected devices, bandwidth, latency, public/internal IP.
-- Real Servers telemetry (the container-privilege decision above),
-  Docker container stats, restart actions.
-- Background workers for system monitoring.
+- Persistent storage for module state (currently only Core
+  config/notifications use the Storage Manager; tasks, mail, media
+  position, and room state all reset on restart).
+- Real Servers/Network telemetry - needs a deliberate decision about
+  bind-mounting `/proc`/`/sys`/the disk device into the container (see
+  `modules/servers/README.md` and `modules/network/README.md`).
+- Notification Manager wired to real events (server online/offline,
+  new mail, task completed).
+- Docker container stats and restart actions on the Servers page.
 
-## 0.3.0 — Communication & Media
+## 0.3.0 — Real external integrations
 
-- Gmail module.
-- Spotify / Apple Music module.
-- Quick reply and playback controls surfaced on the Home page.
+- Real weather API.
+- Real calendar source (CalDAV/Google Calendar).
+- Gmail OAuth for Communication.
+- Spotify/Apple Music OAuth for Media.
+- Real smart-home connection (Home Assistant/Zigbee/Matter) for Room.
+- Real bank/card integration for Finance.
 
-## 0.4.0 — AI
+## 0.4.0 — Real AI
 
-- Alex Assistant chat interface.
-- Conversation history.
-- Local and cloud model support.
+- Replace the AI module's scripted keyword matcher with an actual
+  language model call (local via something like Ollama, or a cloud
+  API) - credentials in `.env`, never in code.
+- Conversation history persisted, not just in-memory.
 
 ## 0.5.0 — Automation & Plugins
 
