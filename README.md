@@ -81,6 +81,12 @@ docker compose -f docker/docker-compose.yml up -d
 
 One command. Nothing more.
 
+### Raspberry Pi 5
+
+See [docs/INSTALL_RPI5.md](docs/INSTALL_RPI5.md) for the full install
+guide - flashing the OS, Docker setup, and kiosk mode on the official
+touch display.
+
 ## Testing
 
 ```bash
