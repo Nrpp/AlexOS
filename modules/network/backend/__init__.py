@@ -9,11 +9,14 @@ from typing import Any
 from app.core.event_bus import EventBus
 
 from .router import router
-from .state import provider, stats_to_payload
+from .state import provider, status_to_payload
 
 __all__ = ["router", "on_load"]
 
-_DEFAULT_TICK_INTERVAL_SECONDS = 5
+_DEFAULT_TICK_INTERVAL_SECONDS = 30
+# Public IP rarely changes and the lookup is an external HTTP call - no
+# need to hit it every tick. ~5 minutes at the default 30s tick interval.
+_TICKS_PER_PUBLIC_IP_REFRESH = 10
 
 
 def on_load(event_bus: EventBus, config: dict[str, Any]) -> None:
@@ -23,8 +26,13 @@ def on_load(event_bus: EventBus, config: dict[str, Any]) -> None:
 
 
 async def _tick_forever(event_bus: EventBus, interval_seconds: float) -> None:
+    tick_count = 0
     while True:
+        await provider.refresh_latency()
+        if tick_count % _TICKS_PER_PUBLIC_IP_REFRESH == 0:
+            await provider.refresh_public_ip()
         await event_bus.publish(
-            "network.updated", stats_to_payload(provider.read()), source="network", retain=True
+            "network.updated", status_to_payload(provider.status()), source="network", retain=True
         )
+        tick_count += 1
         await asyncio.sleep(interval_seconds)

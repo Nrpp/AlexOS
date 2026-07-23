@@ -81,10 +81,12 @@ membership) in favor of Google Cast for Media.
       container - a deliberate, root-equivalent security tradeoff (see
       `modules/servers/README.md`). CPU/RAM/disk/temperature stay
       simulated (separate decision, see 0.3.0).
-- [ ] Network: real device discovery (ARP + on-demand ping sweep),
-      on-demand speed test, and an honest look at why per-device
-      bandwidth isn't feasible from a Pi that isn't the LAN's gateway -
-      in progress.
+- [x] Network: real internal/public IP, real internet latency, real
+      LAN device discovery (ARP + on-demand ping sweep, Linux-only),
+      and an on-demand speed test (`speedtest-cli`), replacing the
+      simulated provider. Per-device bandwidth usage was scoped and
+      explicitly not built - not observable from a Pi that isn't the
+      LAN's own gateway (see `modules/network/README.md`).
 - [x] `modules/focus` - start/stop a focus session, publishes
       `focus.started`/`focus.ended` and fires outbound webhooks
       (`FOCUS_WEBHOOK_URLS`) so other devices can react. This is the

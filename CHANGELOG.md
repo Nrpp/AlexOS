@@ -6,6 +6,22 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- Network module (`modules/network`) now uses **real data** instead of
+  a mock provider: real internal IP (local socket trick, works
+  everywhere), real public IP (one call to api.ipify.org, refreshed
+  every ~5 min), real internet latency (one ICMP ping per tick,
+  Linux-only), real LAN device discovery (`/proc/net/arp` plus an
+  on-demand "Scan network" ping sweep of the local `/24`, Linux-only),
+  and an on-demand speed test (`speedtest-cli`, new dependency - see
+  `apps/api/requirements.txt`) replacing the continuously-simulated
+  bandwidth numbers. Verified live: internal/public IP and a full
+  real speed test all worked end-to-end on this (non-Linux) dev
+  machine; the Linux-only paths (latency, ARP, scanning) degrade
+  gracefully here and are covered by unit tests instead, since there's
+  no Linux LAN to verify them against in development.
+  Per-device bandwidth usage was considered and explicitly **not**
+  built - it isn't observable from a Pi that isn't the LAN's own
+  gateway; see `modules/network/README.md` for why, rather than faking it.
 - Servers module (`modules/servers`) gained a **Docker containers**
   widget: real container list + start/stop/restart via the Docker
   Engine API over the host's `/var/run/docker.sock`, using httpx's

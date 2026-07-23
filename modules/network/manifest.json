@@ -1,16 +1,21 @@
 {
   "name": "network",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "AlexOS",
-  "description": "Connected devices, bandwidth, latency, and IP addresses - simulated for now, same reasons as the servers module.",
+  "description": "Real internal/public IP, internet latency, LAN device discovery, and on-demand speed tests.",
   "permissions": [],
   "dependencies": [],
-  "routes": ["/status"],
+  "routes": ["/status", "/devices", "/scan", "/speedtest"],
   "widgets": [
     {
       "id": "network",
       "name": "Network",
-      "description": "Connected devices, bandwidth, latency, and IPs."
+      "description": "IPs, latency, and on-demand speed test."
+    },
+    {
+      "id": "network-devices",
+      "name": "Network devices",
+      "description": "Devices discovered on the local network."
     }
   ],
   "icon": "lan"
