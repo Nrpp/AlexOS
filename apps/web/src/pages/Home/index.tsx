@@ -39,6 +39,7 @@ const DEDICATED_HOME_WIDGETS = new Set([
   "communication",
   "media",
   "room",
+  "control_center", // lives in Settings, not Home - see apps/web/src/pages/Settings/index.tsx
 ]);
 
 function Greeting() {
@@ -121,10 +122,73 @@ function AddTaskDialog({ open, onOpenChange, apiBaseUrl }: AddTaskDialogProps) {
   );
 }
 
+interface NewNoteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  apiBaseUrl: string;
+}
+
+/** Opens the same note-creation flow as the Notes widget itself
+ * (modules/notes/frontend/index.tsx) - kept separate rather than
+ * imported from there, matching AddTaskDialog's precedent above. */
+function NewNoteDialog({ open, onOpenChange, apiBaseUrl }: NewNoteDialogProps) {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+
+  const submit = async () => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    await fetch(`${apiBaseUrl}/api/v1/modules/notes/notes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: trimmed, body }),
+    });
+    setTitle("");
+    setBody("");
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        title="New note"
+        primaryAction={
+          <Button variant="primary" onClick={() => void submit()}>
+            Save
+          </Button>
+        }
+        secondaryAction={
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+        }
+      >
+        <div className="flex flex-col gap-3">
+          <Input
+            autoFocus
+            placeholder="Title..."
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            aria-label="New note title"
+          />
+          <textarea
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            placeholder="Write something..."
+            aria-label="New note body"
+            className="min-h-[120px] w-full resize-none rounded-button border border-border bg-background-secondary px-4 py-3 text-body text-text-primary placeholder:text-text-secondary outline-none transition-colors duration-base ease-out focus-visible:ring-2 focus-visible:ring-accent-primary"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function QuickActions() {
   const { openDialog } = useDialogs();
   const { apiClient } = useCore();
   const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [newNoteOpen, setNewNoteOpen] = useState(false);
 
   const startFocusMode = async () => {
     try {
@@ -160,11 +224,7 @@ function QuickActions() {
     {
       label: "New note",
       icon: "note_add",
-      onClick: () =>
-        openDialog({
-          title: "New note",
-          description: "This action isn't wired up to a module yet.",
-        }),
+      onClick: () => setNewNoteOpen(true),
     },
   ];
 
@@ -186,17 +246,18 @@ function QuickActions() {
         </CardContent>
       </Card>
       <AddTaskDialog open={addTaskOpen} onOpenChange={setAddTaskOpen} apiBaseUrl={apiClient.baseUrl} />
+      <NewNoteDialog open={newNoteOpen} onOpenChange={setNewNoteOpen} apiBaseUrl={apiClient.baseUrl} />
     </>
   );
 }
 
 function FavoriteWidgets() {
   const { eventBus, apiClient } = useCore();
-  const widgets = Object.values(widgetRegistry).filter(
+  const entries = Object.values(widgetRegistry).filter(
     ({ moduleName }) => !DEDICATED_HOME_WIDGETS.has(moduleName),
   );
 
-  if (widgets.length === 0) {
+  if (entries.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -209,9 +270,11 @@ function FavoriteWidgets() {
 
   return (
     <>
-      {widgets.map(({ moduleName, Component }) => (
-        <Component key={moduleName} eventBus={eventBus} apiBaseUrl={apiClient.baseUrl} />
-      ))}
+      {entries.flatMap(({ moduleName, widgets }) =>
+        widgets.map((Widget, index) => (
+          <Widget key={`${moduleName}-${index}`} eventBus={eventBus} apiBaseUrl={apiClient.baseUrl} />
+        )),
+      )}
     </>
   );
 }

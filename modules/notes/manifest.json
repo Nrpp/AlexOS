@@ -1,0 +1,17 @@
+{
+  "name": "notes",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Quick persisted notes - title and body, create/edit/delete.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/notes"],
+  "widgets": [
+    {
+      "id": "notes",
+      "name": "Notes",
+      "description": "Create, edit, and delete quick notes."
+    }
+  ],
+  "icon": "note"
+}

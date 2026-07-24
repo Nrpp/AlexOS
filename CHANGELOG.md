@@ -6,6 +6,13 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- Notes module (`modules/notes`) - real, persisted notes (title +
+  body), create/edit/delete. Home's "New note" quick action now
+  actually creates a note instead of showing a placeholder dialog.
+  Rendered on Home under "Favorite widgets" rather than a dedicated
+  Dock page. `apps/web/src/pages/Home/index.tsx`'s `FavoriteWidgets`
+  now also renders every widget a module exports (not just the
+  default one), matching the fix already made to `ModuleWidgetPage`.
 - Control Center module (`modules/control_center`) - real WiFi
   (`nmcli`/NetworkManager) and Bluetooth (`bluetoothctl`/BlueZ) control,
   surfaced in Settings: scan/connect/disconnect WiFi networks,
