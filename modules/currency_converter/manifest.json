@@ -1,0 +1,17 @@
+{
+  "name": "currency_converter",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Real exchange rates via Frankfurter (ECB data, no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/convert"],
+  "widgets": [
+    {
+      "id": "currency-converter",
+      "name": "Currency converter",
+      "description": "Convert between currencies using real ECB exchange rates."
+    }
+  ],
+  "icon": "currency_exchange"
+}

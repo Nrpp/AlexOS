@@ -1,0 +1,17 @@
+{
+  "name": "system_info",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "AlexOS version, uptime, and modules loaded - reads the existing Core health endpoint, no module-specific backend needed.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "system-info",
+      "name": "System info",
+      "description": "AlexOS version, uptime, and modules loaded."
+    }
+  ],
+  "icon": "info"
+}

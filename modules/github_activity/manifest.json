@@ -1,0 +1,17 @@
+{
+  "name": "github_activity",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Recent public GitHub activity for a configured username (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/activity"],
+  "widgets": [
+    {
+      "id": "github-activity",
+      "name": "GitHub activity",
+      "description": "Recent public events for a GitHub user."
+    }
+  ],
+  "icon": "code"
+}

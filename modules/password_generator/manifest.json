@@ -1,0 +1,17 @@
+{
+  "name": "password_generator",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Generate a random password using the Web Crypto API - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "password-generator",
+      "name": "Password generator",
+      "description": "Cryptographically random passwords, configurable length and character sets."
+    }
+  ],
+  "icon": "password"
+}

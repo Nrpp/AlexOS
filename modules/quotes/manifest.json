@@ -1,0 +1,17 @@
+{
+  "name": "quotes",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "A random inspirational quote, via ZenQuotes (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/quote"],
+  "widgets": [
+    {
+      "id": "quotes",
+      "name": "Quote",
+      "description": "A random quote, refreshable on demand."
+    }
+  ],
+  "icon": "format_quote"
+}

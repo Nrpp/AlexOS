@@ -1,0 +1,17 @@
+{
+  "name": "shopping_list",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "A shared shopping list - add items, check them off.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "shopping-list",
+      "name": "Shopping list",
+      "description": "Items to buy, check off as you shop."
+    }
+  ],
+  "icon": "shopping_cart"
+}

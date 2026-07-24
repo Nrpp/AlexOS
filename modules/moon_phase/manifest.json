@@ -1,0 +1,17 @@
+{
+  "name": "moon_phase",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Today's moon phase, computed astronomically - fully client-side, no API needed.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "moon-phase",
+      "name": "Moon phase",
+      "description": "Today's moon phase and illumination."
+    }
+  ],
+  "icon": "bedtime"
+}

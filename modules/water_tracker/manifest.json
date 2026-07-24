@@ -1,0 +1,17 @@
+{
+  "name": "water_tracker",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Log glasses of water today - automatically resets each day.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/today"],
+  "widgets": [
+    {
+      "id": "water-tracker",
+      "name": "Water tracker",
+      "description": "Glasses of water logged today, toward a daily goal."
+    }
+  ],
+  "icon": "water_drop"
+}

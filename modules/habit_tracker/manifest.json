@@ -1,0 +1,17 @@
+{
+  "name": "habit_tracker",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Track daily habits with real streak counting.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/habits"],
+  "widgets": [
+    {
+      "id": "habit-tracker",
+      "name": "Habit tracker",
+      "description": "Daily habits with streaks."
+    }
+  ],
+  "icon": "task_alt"
+}

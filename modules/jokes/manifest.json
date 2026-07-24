@@ -1,0 +1,17 @@
+{
+  "name": "jokes",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "A random joke via the Official Joke API (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/joke"],
+  "widgets": [
+    {
+      "id": "jokes",
+      "name": "Joke",
+      "description": "Setup and punchline, refreshable on demand."
+    }
+  ],
+  "icon": "sentiment_very_satisfied"
+}

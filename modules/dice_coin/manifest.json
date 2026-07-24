@@ -1,0 +1,17 @@
+{
+  "name": "dice_coin",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Roll a die or flip a coin - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "dice-coin",
+      "name": "Dice & coin",
+      "description": "Roll a die (d4-d20) or flip a coin."
+    }
+  ],
+  "icon": "casino"
+}

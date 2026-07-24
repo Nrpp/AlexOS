@@ -6,6 +6,38 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- **20 new modules**, all rendering on Home under "Favorite widgets" (no
+  dedicated Dock page needed for a module this size - see
+  `apps/web/src/pages/Home/index.tsx`'s `DEDICATED_HOME_WIDGETS`).
+  Real public APIs (no key needed unless noted), real client-side
+  logic, or real persisted personal data - never simulated:
+  - `modules/quotes` - random quote (ZenQuotes).
+  - `modules/currency_converter` - real ECB exchange rates (Frankfurter).
+  - `modules/jokes` - random joke (Official Joke API).
+  - `modules/recipe_idea` - random recipe (TheMealDB).
+  - `modules/air_quality` - US AQI/PM2.5 for a configured location (Open-Meteo).
+  - `modules/github_activity` - recent public GitHub activity for a
+    configured username (defaults to `Nrpp`).
+  - `modules/astronomy_photo` - NASA's Astronomy Picture of the Day
+    (works with NASA's public `DEMO_KEY`; set `NASA_API_KEY` for higher limits).
+  - `modules/rss_reader` - headlines from a configurable feed (defaults
+    to BBC News), parsed server-side with the standard library.
+  - `modules/system_info` - AlexOS version/uptime/module count, reusing
+    the existing Core health endpoint (no module-specific backend).
+  - `modules/unit_converter`, `modules/dice_coin`,
+    `modules/password_generator` (real Web Crypto randomness),
+    `modules/world_clock`, `modules/stopwatch` (+ a separate countdown
+    timer widget), `modules/moon_phase` (real astronomical calculation)
+    - all fully client-side, no backend.
+  - `modules/reading_list`, `modules/habit_tracker` (real streak
+    counting based on calendar dates), `modules/water_tracker`
+    (auto-resets daily), `modules/bookmarks`, `modules/shopping_list` -
+    real persisted personal data via the generic module-data table.
+  - Verified live: every module loaded cleanly (33 modules total),
+    every real-API module returned genuine live data (including
+    GitHub activity picking up this very session's own pushes), and
+    interactive flows (dice roll, password generation) were exercised
+    in the browser.
 - Notes module (`modules/notes`) - real, persisted notes (title +
   body), create/edit/delete. Home's "New note" quick action now
   actually creates a note instead of showing a placeholder dialog.

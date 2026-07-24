@@ -1,0 +1,17 @@
+{
+  "name": "astronomy_photo",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "NASA's Astronomy Picture of the Day (works out of the box with NASA's public DEMO_KEY).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/today"],
+  "widgets": [
+    {
+      "id": "astronomy-photo",
+      "name": "Astronomy photo",
+      "description": "NASA's Astronomy Picture of the Day."
+    }
+  ],
+  "icon": "nights_stay"
+}

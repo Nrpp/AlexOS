@@ -1,0 +1,22 @@
+{
+  "name": "stopwatch",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Stopwatch with lap times, and a countdown timer - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "stopwatch",
+      "name": "Stopwatch",
+      "description": "Start/stop/lap stopwatch."
+    },
+    {
+      "id": "countdown-timer",
+      "name": "Countdown timer",
+      "description": "Set a duration and count down."
+    }
+  ],
+  "icon": "timer"
+}

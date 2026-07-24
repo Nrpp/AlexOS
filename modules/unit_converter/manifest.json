@@ -1,0 +1,17 @@
+{
+  "name": "unit_converter",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Convert length, weight, and temperature - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "unit-converter",
+      "name": "Unit converter",
+      "description": "Length, weight, and temperature conversion."
+    }
+  ],
+  "icon": "swap_horiz"
+}

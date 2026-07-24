@@ -1,0 +1,17 @@
+{
+  "name": "air_quality",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Real air quality index via Open-Meteo's Air Quality API (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/current"],
+  "widgets": [
+    {
+      "id": "air-quality",
+      "name": "Air quality",
+      "description": "US AQI and PM2.5 for your configured location."
+    }
+  ],
+  "icon": "airwave"
+}

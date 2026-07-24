@@ -101,6 +101,23 @@ membership) in favor of Google Cast for Media.
       Bluetooth control in Settings, via `nmcli`/`bluetoothctl` over a
       bind-mounted host D-Bus socket (another documented, deliberate
       security tradeoff). Not verified against real hardware.
+- [x] Fixed a real bug: Tasks and Calendar never reflected changes made
+      outside AlexOS (Google's own apps) without a manual browser
+      reload - both now poll and publish retained update events.
+- [x] Fixed a real bug: Google Calendar crashed on every request once
+      real credentials were set (`ZoneInfoNotFoundError` - missing
+      `tzdata` in the slim Docker image), silently misreported as "not
+      connected." Added `tzdata` and a distinct, catchable config-error
+      path.
+- [x] Notes module (`modules/notes`) - real persisted notes, wired to
+      Home's "New note" quick action.
+- [x] 20 additional modules (see CHANGELOG for the full list) - quotes,
+      currency conversion, jokes, recipes, air quality, GitHub activity,
+      NASA's photo of the day, an RSS reader, system info, a unit
+      converter, dice/coin, a password generator, a world clock, a
+      stopwatch/timer, moon phase, a reading list, a habit tracker
+      (real streak counting), a water tracker, bookmarks, and a
+      shopping list. All render on Home under "Favorite widgets."
 
 ## 0.3.0 — Persistence and real telemetry
 

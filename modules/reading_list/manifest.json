@@ -1,0 +1,17 @@
+{
+  "name": "reading_list",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Track books you want to read, are reading, or have finished.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/books"],
+  "widgets": [
+    {
+      "id": "reading-list",
+      "name": "Reading list",
+      "description": "Books: want to read, reading, done."
+    }
+  ],
+  "icon": "menu_book"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "recipe_idea",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "A random recipe idea via TheMealDB (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/recipe"],
+  "widgets": [
+    {
+      "id": "recipe-idea",
+      "name": "Recipe idea",
+      "description": "A random recipe, refreshable on demand."
+    }
+  ],
+  "icon": "restaurant"
+}

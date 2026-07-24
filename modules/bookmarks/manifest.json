@@ -1,0 +1,17 @@
+{
+  "name": "bookmarks",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Save and organize quick links.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/bookmarks"],
+  "widgets": [
+    {
+      "id": "bookmarks",
+      "name": "Bookmarks",
+      "description": "Saved links, click to open."
+    }
+  ],
+  "icon": "bookmark"
+}

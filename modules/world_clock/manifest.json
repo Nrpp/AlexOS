@@ -1,0 +1,17 @@
+{
+  "name": "world_clock",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Live time in several timezones, configurable - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "world-clock",
+      "name": "World clock",
+      "description": "Live time across configured timezones."
+    }
+  ],
+  "icon": "public"
+}

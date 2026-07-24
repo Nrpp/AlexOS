@@ -1,0 +1,17 @@
+{
+  "name": "rss_reader",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Headlines from a configurable RSS/Atom feed (defaults to BBC News).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/headlines"],
+  "widgets": [
+    {
+      "id": "rss-reader",
+      "name": "RSS reader",
+      "description": "Recent headlines from a configured feed."
+    }
+  ],
+  "icon": "rss_feed"
+}
