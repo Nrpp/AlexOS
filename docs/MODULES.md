@@ -62,6 +62,24 @@ manual registration) and:
 A module needs neither of these - a manifest with only frontend widgets
 is entirely valid.
 
+### Import gotcha: `from .sibling import name`, never `from . import sibling`
+
+Because each module's backend is loaded via a hand-built
+`importlib` spec rather than a normal package import (see
+`ModuleManager._import_backend_package`), only the package itself
+(`backend/__init__.py`) is registered in `sys.modules` - not a
+standalone entry for each sibling file. Importing specific names out
+of a sibling file (`from .state import provider`, `from .router import
+router` - the pattern every module already uses) works fine. Importing
+a sibling *module itself* as an attribute (`from . import state`, or
+`from . import wifi, bluetooth` if you have two files with a
+same-named function you want to keep qualified) raises
+`ModuleNotFoundError: No module named 'alexos_modules'` instead - hit
+once while building `modules/control_center`, whose `wifi.py` and
+`bluetooth.py` both define `is_available()`. Fixed there by importing
+each name explicitly with an alias
+(`from .wifi import is_available as wifi_available`) instead.
+
 ## Frontend discovery
 
 `apps/web/src/modules/registry.ts` uses

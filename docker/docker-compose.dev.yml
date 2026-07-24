@@ -22,6 +22,9 @@ services:
       # comment. Comment out if you don't want Servers' container
       # features enabled in dev.
       - /var/run/docker.sock:/var/run/docker.sock
+      # Same tradeoff as docker-compose.yml (production) for
+      # modules/control_center's WiFi/Bluetooth control.
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
     ports:
       - "8000:8000"
     command:

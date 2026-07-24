@@ -1,0 +1,30 @@
+{
+  "name": "control_center",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "WiFi and Bluetooth control for the Raspberry Pi itself, surfaced in Settings.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [
+    "/wifi/networks",
+    "/wifi/connect",
+    "/wifi/disconnect",
+    "/bluetooth/devices",
+    "/bluetooth/scan",
+    "/bluetooth/pair",
+    "/bluetooth/remove"
+  ],
+  "widgets": [
+    {
+      "id": "wifi",
+      "name": "WiFi",
+      "description": "Scan, connect, and disconnect from WiFi networks."
+    },
+    {
+      "id": "bluetooth",
+      "name": "Bluetooth",
+      "description": "Scan, pair, connect, and remove Bluetooth devices."
+    }
+  ],
+  "icon": "settings_system_daydream"
+}

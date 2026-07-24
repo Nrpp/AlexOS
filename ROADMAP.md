@@ -97,6 +97,11 @@ membership) in favor of Google Cast for Media.
       Windows. See `modules/focus/README.md` for the honest limitations
       and per-device setup.
 
+- [x] Control center (`modules/control_center`) - real WiFi and
+      Bluetooth control in Settings, via `nmcli`/`bluetoothctl` over a
+      bind-mounted host D-Bus socket (another documented, deliberate
+      security tradeoff). Not verified against real hardware.
+
 ## 0.3.0 — Persistence and real telemetry
 
 - Persistent storage for module state (currently only Core

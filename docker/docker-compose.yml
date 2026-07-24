@@ -31,6 +31,14 @@ services:
       # device, not a shared or internet-facing host. Comment this line
       # out if you'd rather keep Servers' container features disabled.
       - /var/run/docker.sock:/var/run/docker.sock
+      # Lets modules/control_center's nmcli/bluetoothctl commands reach
+      # the host's NetworkManager/BlueZ over D-Bus to control WiFi and
+      # Bluetooth (see modules/control_center/README.md). Another real
+      # host-privilege tradeoff, same category as the Docker socket
+      # above - the system D-Bus reaches many host services, not just
+      # network/bluetooth. Comment out if you'd rather keep the
+      # control center's WiFi/Bluetooth features disabled.
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
     restart: unless-stopped
 
   web:

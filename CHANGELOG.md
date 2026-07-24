@@ -4,6 +4,19 @@ All notable changes to AlexOS are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Control Center module (`modules/control_center`) - real WiFi
+  (`nmcli`/NetworkManager) and Bluetooth (`bluetoothctl`/BlueZ) control,
+  surfaced in Settings: scan/connect/disconnect WiFi networks,
+  scan/pair/remove Bluetooth devices. Requires `network-manager`/`bluez`
+  installed in the `api` container and the host's D-Bus system bus
+  bind-mounted in - a real, documented host-privilege tradeoff, the
+  same category as the Docker socket in `modules/servers`. Not
+  verified against real hardware (this dev machine is Windows, which
+  has neither tool) - covered by unit tests against canned command
+  output; both widgets show an honest "not available" state here.
+
 ### Fixed
 
 - **Google Calendar never actually worked once real credentials were

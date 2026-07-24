@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, Toggle } from "@alexos/ui";
+import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, CardEmpty, Toggle } from "@alexos/ui";
 import { useTheme } from "@alexos/hooks";
 import type { SystemHealth } from "@alexos/types";
 import { useCore } from "../../core/useCore";
 import { PagePlaceholder } from "../../components/PagePlaceholder";
+import { widgetRegistry } from "../../modules/registry";
 
 function AppearanceCard() {
   const { theme, setTheme } = useTheme();
@@ -70,6 +71,31 @@ function ModulesCard() {
   );
 }
 
+function ControlCenterSection() {
+  const { eventBus, apiClient } = useCore();
+  const widgets = widgetRegistry.control_center?.widgets ?? [];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <h2 className="text-title font-semibold text-text-primary">Control center</h2>
+        <p className="text-caption text-text-secondary">WiFi and Bluetooth for this Raspberry Pi.</p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {widgets.length > 0 ? (
+          widgets.map((Widget, index) => (
+            <Widget key={index} eventBus={eventBus} apiBaseUrl={apiClient.baseUrl} />
+          ))
+        ) : (
+          <Card>
+            <CardEmpty icon="settings_system_daydream" message="Control center module isn't installed." />
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-6 py-6">
@@ -81,6 +107,7 @@ export default function SettingsPage() {
         <AppearanceCard />
         <ModulesCard />
       </div>
+      <ControlCenterSection />
       <PagePlaceholder icon="build" comingSoon="Plugins, accounts, updates, and backups are on the roadmap." />
     </div>
   );

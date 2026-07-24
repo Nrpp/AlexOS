@@ -3,6 +3,12 @@ FROM python:3.12-slim
 
 WORKDIR /srv/api
 
+# network-manager (nmcli) and bluez (bluetoothctl) let modules/control_center
+# manage the host's WiFi/Bluetooth - see that module's README for the
+# D-Bus bind-mount this also requires.
+RUN apt-get update && apt-get install -y --no-install-recommends network-manager bluez \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY apps/api/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
