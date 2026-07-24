@@ -12,6 +12,7 @@ const NetworkPage = lazy(() => import("../pages/Network"));
 const CommunicationPage = lazy(() => import("../pages/Communication"));
 const MediaPage = lazy(() => import("../pages/Media"));
 const RoomPage = lazy(() => import("../pages/Room"));
+const UtilitiesPage = lazy(() => import("../pages/Utilities"));
 const SettingsPage = lazy(() => import("../pages/Settings"));
 
 export const router = createBrowserRouter([
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: "/communication", element: <CommunicationPage /> },
       { path: "/media", element: <MediaPage /> },
       { path: "/room", element: <RoomPage /> },
+      { path: "/utilities", element: <UtilitiesPage /> },
       { path: "/settings", element: <SettingsPage /> },
     ],
   },

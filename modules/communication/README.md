@@ -45,6 +45,10 @@ your `.env` on the Pi and restart the backend.
   messages, unread ones highlighted; clicking one opens
   `MessageViewerDialog`, which fetches and shows the full body. Shows a
   clear "Gmail isn't connected" state if the OAuth env vars aren't set.
+  A "Unread only" toggle filters the list client-side - since it
+  filters within whatever's already been fetched, it only ever
+  narrows the current 10 most recent messages, not your whole inbox's
+  unread count.
 
 ## Scope
 

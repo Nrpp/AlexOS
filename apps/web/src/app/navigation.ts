@@ -20,5 +20,6 @@ export const NAV_ITEMS: NavItem[] = [
   { path: "/communication", label: "Communication", icon: "forum" },
   { path: "/media", label: "Media", icon: "music_note" },
   { path: "/room", label: "Room", icon: "living" },
+  { path: "/utilities", label: "Utilities", icon: "widgets" },
   { path: "/settings", label: "Settings", icon: "settings" },
 ];

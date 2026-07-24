@@ -5,8 +5,13 @@ WORKDIR /srv/api
 
 # network-manager (nmcli) and bluez (bluetoothctl) let modules/control_center
 # manage the host's WiFi/Bluetooth - see that module's README for the
-# D-Bus bind-mount this also requires.
-RUN apt-get update && apt-get install -y --no-install-recommends network-manager bluez \
+# D-Bus bind-mount this also requires. curl+gnupg are only needed to add
+# Tailscale's apt repo below, not at runtime.
+RUN apt-get update && apt-get install -y --no-install-recommends network-manager bluez curl gnupg \
+    && curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg -o /usr/share/keyrings/tailscale-archive-keyring.gpg \
+    && curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.tailscale-keyring.list -o /etc/apt/sources.list.d/tailscale.list \
+    && apt-get update && apt-get install -y --no-install-recommends tailscale \
+    && apt-get purge -y --auto-remove curl gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY apps/api/requirements.txt ./requirements.txt

@@ -5,7 +5,7 @@ export default function NetworkPage() {
     <ModuleWidgetPage
       title="Network"
       description="Connected devices, bandwidth, latency, and IP addresses."
-      moduleName="network"
+      moduleName={["network", "tailscale"]}
       fallbackIcon="lan"
       fallbackMessage="No network data yet - device discovery is on the roadmap."
     />

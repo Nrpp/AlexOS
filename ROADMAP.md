@@ -117,7 +117,22 @@ membership) in favor of Google Cast for Media.
       converter, dice/coin, a password generator, a world clock, a
       stopwatch/timer, moon phase, a reading list, a habit tracker
       (real streak counting), a water tracker, bookmarks, and a
-      shopping list. All render on Home under "Favorite widgets."
+      shopping list - moved to their own Utilities page (see below).
+- [x] Utilities page - the 20 modules above moved off Home onto their
+      own Dock page, so Home doesn't turn into a dump of every
+      installed widget.
+- [x] Home screen widgets picker (Settings) - choose which modules show
+      on Home, persisted server-side so it survives a Pi restart.
+      Default (until the user chooses) is Clock + Notes.
+- [x] Tailscale module (`modules/tailscale`) - real network status on
+      the Network page, via the `tailscale` CLI over a bind-mounted
+      host socket (a narrower tradeoff than the Docker/D-Bus sockets
+      already in use). Verified against a real (if logged-out)
+      installation.
+- [x] Communication's inbox gained an "Unread only" filter toggle.
+- [x] Fixed a real bug: module tick-loop background tasks were never
+      cancelled on shutdown, causing them to pile up (and eventually
+      hang) across repeated app instantiations in the test suite.
 
 ## 0.3.0 — Persistence and real telemetry
 

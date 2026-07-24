@@ -11,9 +11,10 @@ import {
   Input,
 } from "@alexos/ui";
 import { getDayPart, capitalize } from "@alexos/utils";
-import { widgetRegistry } from "../../modules/registry";
+import { widgetRegistry, type WidgetRegistryEntry } from "../../modules/registry";
 import { useCore } from "../../core/useCore";
 import { useDialogs } from "../../layout/DialogsLayer";
+import { DEFAULT_HOME_MODULE_NAMES } from "../../core/defaultHomeWidgets";
 
 const GREETINGS: Record<ReturnType<typeof getDayPart>, string> = {
   morning: "Good morning",
@@ -21,26 +22,6 @@ const GREETINGS: Record<ReturnType<typeof getDayPart>, string> = {
   evening: "Good evening",
   night: "Good night",
 };
-
-// weather/calendar/tasks have dedicated cards on Home below; every other
-// installed module (study, servers, network, communication, media, room)
-// has its own page from the Dock. Excluded here so nothing renders
-// twice, and so Home doesn't turn into a dump of every installed widget
-// - "clock" is the only one left with no other home. A real "favorite"
-// picker is future work; this is the honest default until then.
-const DEDICATED_HOME_WIDGETS = new Set([
-  "weather",
-  "calendar",
-  "tasks",
-  "study",
-  "focus",
-  "servers",
-  "network",
-  "communication",
-  "media",
-  "room",
-  "control_center", // lives in Settings, not Home - see apps/web/src/pages/Settings/index.tsx
-]);
 
 function Greeting() {
   const { apiClient } = useCore();
@@ -253,17 +234,34 @@ function QuickActions() {
 
 function FavoriteWidgets() {
   const { eventBus, apiClient } = useCore();
-  const entries = Object.values(widgetRegistry).filter(
-    ({ moduleName }) => !DEDICATED_HOME_WIDGETS.has(moduleName),
-  );
+  const [selectedModuleNames, setSelectedModuleNames] = useState<string[] | null>(null);
 
-  if (entries.length === 0) {
+  useEffect(() => {
+    let cancelled = false;
+    apiClient
+      .getHomeWidgetSelection()
+      .then((result) => {
+        if (!cancelled) setSelectedModuleNames(result.moduleNames ?? DEFAULT_HOME_MODULE_NAMES);
+      })
+      .catch(() => {
+        if (!cancelled) setSelectedModuleNames(DEFAULT_HOME_MODULE_NAMES);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [apiClient]);
+
+  const entries = (selectedModuleNames ?? [])
+    .map((name) => widgetRegistry[name])
+    .filter((entry): entry is WidgetRegistryEntry => entry !== undefined);
+
+  if (selectedModuleNames !== null && entries.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Favorite widgets</CardTitle>
         </CardHeader>
-        <CardEmpty icon="widgets" message="No favorite widgets yet." />
+        <CardEmpty icon="widgets" message="No widgets selected - choose some in Settings." />
       </Card>
     );
   }

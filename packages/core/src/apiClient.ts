@@ -1,4 +1,4 @@
-import type { AppConfig, Notification, SystemHealth } from "@alexos/types";
+import type { AppConfig, HomeWidgetSelection, Notification, RegisteredModule, SystemHealth } from "@alexos/types";
 
 export class ApiError extends Error {
   constructor(
@@ -25,6 +25,21 @@ export class ApiClient {
 
   async getNotifications(): Promise<Notification[]> {
     return this.request<Notification[]>("/api/v1/notifications");
+  }
+
+  async getModules(): Promise<RegisteredModule[]> {
+    return this.request<RegisteredModule[]>("/api/v1/modules");
+  }
+
+  async getHomeWidgetSelection(): Promise<HomeWidgetSelection> {
+    return this.request<HomeWidgetSelection>("/api/v1/config/home-widgets");
+  }
+
+  async updateHomeWidgetSelection(selection: HomeWidgetSelection): Promise<HomeWidgetSelection> {
+    return this.request<HomeWidgetSelection>("/api/v1/config/home-widgets", {
+      method: "PUT",
+      body: JSON.stringify(selection),
+    });
   }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {

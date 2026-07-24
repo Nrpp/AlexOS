@@ -1,0 +1,17 @@
+{
+  "name": "tailscale",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Real Tailscale network status - this device and its peers, via the local tailscaled socket.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/status"],
+  "widgets": [
+    {
+      "id": "tailscale-status",
+      "name": "Tailscale",
+      "description": "This device and its Tailscale peers, online/offline."
+    }
+  ],
+  "icon": "hub"
+}

@@ -25,6 +25,9 @@ services:
       # Same tradeoff as docker-compose.yml (production) for
       # modules/control_center's WiFi/Bluetooth control.
       - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
+      # Same tradeoff as docker-compose.yml (production) for
+      # modules/tailscale's status widget.
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
     ports:
       - "8000:8000"
     command:

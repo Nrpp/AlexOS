@@ -39,6 +39,13 @@ services:
       # network/bluetooth. Comment out if you'd rather keep the
       # control center's WiFi/Bluetooth features disabled.
       - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
+      # Lets modules/tailscale's `tailscale status` reach the host's
+      # tailscaled (assumes Tailscale is installed and running on the
+      # Pi itself, outside this container). Narrower than the two
+      # mounts above - this socket only exposes Tailscale's own status/
+      # control, not broad host access. Comment out if you don't run
+      # Tailscale on this Pi.
+      - /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
     restart: unless-stopped
 
   web:

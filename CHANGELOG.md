@@ -6,9 +6,42 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
-- **20 new modules**, all rendering on Home under "Favorite widgets" (no
-  dedicated Dock page needed for a module this size - see
-  `apps/web/src/pages/Home/index.tsx`'s `DEDICATED_HOME_WIDGETS`).
+- **Utilities page** (`apps/web/src/pages/Utilities`) - the 20 modules
+  below moved here from Home's "Favorite widgets" catch-all, which was
+  turning into a dump of everything installed. New Dock entry.
+- **Home screen widgets picker** (Settings) - choose which modules'
+  widgets show on Home, persisted server-side
+  (`GET`/`PUT /api/v1/config/home-widgets`, backed by the same
+  key/value store as the theme setting) so the choice survives a Pi
+  restart, unlike a browser-only setting would. Eligible modules come
+  from a new `GET /api/v1/modules` endpoint (using the `RegisteredModule`
+  schema that had been scaffolded since Foundation but never wired to
+  an endpoint). Home's default (before any choice is saved) is just
+  Clock + Notes - shared between Home and Settings via
+  `apps/web/src/core/defaultHomeWidgets.ts` so the two can't drift.
+  Verified live end-to-end: toggling in Settings persists immediately
+  and the new selection survives a full page reload.
+- Tailscale module (`modules/tailscale`) - real network status (this
+  device + peers, online/offline) via the `tailscale` CLI talking to
+  the host's `tailscaled` over its local control socket, bind-mounted
+  into the `api` container (a narrower host-integration tradeoff than
+  the Docker/D-Bus sockets already in use elsewhere). Rendered on the
+  Network page. Verified live against a real (if logged-out) Tailscale
+  installation - not just canned test fixtures - though not against an
+  actual connected tailnet or the container-specific socket path.
+- Communication (Gmail) inbox gained an "Unread only" toggle, filtering
+  client-side within the already-fetched recent messages.
+
+### Fixed
+
+- Every module's background tick loop (weather, network, calendar, ...)
+  was never cancelled on app shutdown - harmless for a single long-lived
+  process, but each fresh `TestClient(app)` in tests leaked its own
+  full set, and they piled up across a test session until pytest
+  itself started hanging. `apps/api/app/main.py`'s lifespan now cancels
+  exactly the tasks modules spawned during startup.
+
+- **20 modules** (now on the Utilities page above, not Home).
   Real public APIs (no key needed unless noted), real client-side
   logic, or real persisted personal data - never simulated:
   - `modules/quotes` - random quote (ZenQuotes).

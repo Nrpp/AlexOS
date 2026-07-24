@@ -7,6 +7,7 @@ Event Bus to hand to modules), then the services that sit on top.
 
 from __future__ import annotations
 
+import asyncio
 import time
 from contextlib import asynccontextmanager
 
@@ -37,8 +38,14 @@ async def lifespan(app: FastAPI):
     event_bus = EventBus()
     module_manager = ModuleManager(settings.modules_dir)
     module_manager.discover()
+    # Modules with a background tick loop (weather, network, calendar, ...)
+    # call asyncio.create_task() from inside on_load() - snapshot the task
+    # set before loading so shutdown can cancel exactly the ones modules
+    # spawned, not anything else running on the loop.
+    tasks_before_modules = asyncio.all_tasks()
     for name, module_router in module_manager.load_backend_routers(event_bus):
         app.include_router(module_router, prefix=f"/api/v1/modules/{name}", tags=[name])
+    module_background_tasks = asyncio.all_tasks() - tasks_before_modules
 
     app.state.database = database
     app.state.storage_manager = storage_manager
@@ -57,6 +64,14 @@ async def lifespan(app: FastAPI):
         )
 
     yield
+
+    # Without this, every module's tick loop (an infinite `while True`)
+    # keeps running forever - harmless for a single long-lived process,
+    # but each fresh app instance (e.g. every TestClient(app) in tests)
+    # leaks its own full set, and they pile up across a test session.
+    for task in module_background_tasks:
+        task.cancel()
+    await asyncio.gather(*module_background_tasks, return_exceptions=True)
 
     await database.dispose()
 

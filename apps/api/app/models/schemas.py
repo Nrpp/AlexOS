@@ -66,6 +66,16 @@ class RegisteredModule(CamelModel):
     has_frontend: bool
 
 
+class HomeWidgetSelection(CamelModel):
+    """Which modules' widgets show on Home, persisted across restarts.
+    `module_names: None` means "no explicit choice yet" - the frontend
+    falls back to a sensible built-in default rather than showing
+    nothing (see apps/web/src/pages/Home/index.tsx's
+    DEFAULT_HOME_MODULE_NAMES)."""
+
+    module_names: list[str] | None = None
+
+
 class EventEnvelope(CamelModel):
     name: str
     payload: Any = None

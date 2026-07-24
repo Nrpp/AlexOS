@@ -10,6 +10,7 @@ import {
   Dialog,
   DialogContent,
   CardError,
+  Toggle,
 } from "@alexos/ui";
 import { useEventBus, type EventBusLike } from "@alexos/hooks";
 
@@ -100,6 +101,7 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
   const [data, setData] = useState<MessagesResponse | null>(null);
   const [openMessageId, setOpenMessageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [unreadOnly, setUnreadOnly] = useState(false);
 
   const refresh = useCallback(() => {
     if (!apiBaseUrl) return;
@@ -123,6 +125,7 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
   useEventBus(eventBus, "mail.received", refresh);
 
   const unreadCount = data?.messages.filter((message) => message.unread).length ?? 0;
+  const visibleMessages = (data?.messages ?? []).filter((message) => !unreadOnly || message.unread);
 
   return (
     <Card>
@@ -131,6 +134,14 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
           <span className="material-symbols-rounded" aria-hidden>
             forum
           </span>
+        }
+        actions={
+          data?.configured ? (
+            <div className="flex items-center gap-2">
+              <span className="text-caption text-text-secondary">Unread only</span>
+              <Toggle checked={unreadOnly} onCheckedChange={setUnreadOnly} label="Show unread only" />
+            </div>
+          ) : undefined
         }
       >
         <CardTitle>Inbox</CardTitle>
@@ -145,10 +156,12 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
         <CardEmpty icon="mail" message="Gmail isn't connected yet - see modules/communication/README.md." />
       ) : data.messages.length === 0 ? (
         <CardEmpty icon="mark_email_read" message="No messages." />
+      ) : visibleMessages.length === 0 ? (
+        <CardEmpty icon="mark_email_read" message="No unread messages." />
       ) : (
         <CardContent>
           <ul className="flex flex-col gap-3">
-            {data.messages.map((message) => (
+            {visibleMessages.map((message) => (
               <li key={message.id}>
                 <button
                   type="button"
