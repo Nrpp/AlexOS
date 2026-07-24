@@ -4,6 +4,29 @@ All notable changes to AlexOS are documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Google Calendar never actually worked once real credentials were
+  set** - `zoneinfo.ZoneInfo(...)` raised `ZoneInfoNotFoundError`
+  inside the `python:3.12-slim` container (no system IANA timezone
+  database), which surfaced as an unhandled 500 that the frontend
+  couldn't tell apart from "not connected." Fixed by adding `tzdata` to
+  `apps/api/requirements.txt` and by making bad timezones raise a
+  distinct `CalendarConfigError` (-> a 422 with the real message)
+  instead of crashing. Reproduced and confirmed fixed locally; covered
+  by a regression test (`modules/calendar/tests/test_state.py`).
+- **Tasks (and Calendar) didn't reflect changes made outside AlexOS
+  without a manual page reload** - both modules only ever fetched once
+  on page load with no background polling, so a task added in the
+  Google Tasks app or an event added in Google Calendar's own app never
+  reached the widget until you reloaded the browser. Both now poll
+  periodically (`tasks.updated`/`calendar.updated`, retained) like
+  `modules/communication` already did for mail.
+- Tasks, Calendar, and Communication widgets now check `response.ok`
+  before parsing JSON, so a real backend error shows the actual message
+  (with a retry button) instead of being silently mistaken for "not
+  configured."
+
 ### Added
 
 - Network module (`modules/network`) now uses **real data** instead of

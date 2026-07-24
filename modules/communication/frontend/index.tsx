@@ -9,6 +9,7 @@ import {
   CardLoading,
   Dialog,
   DialogContent,
+  CardError,
 } from "@alexos/ui";
 import { useEventBus, type EventBusLike } from "@alexos/hooks";
 
@@ -98,13 +99,21 @@ export interface CommunicationWidgetProps {
 export default function CommunicationWidget({ eventBus, apiBaseUrl }: CommunicationWidgetProps) {
   const [data, setData] = useState<MessagesResponse | null>(null);
   const [openMessageId, setOpenMessageId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     if (!apiBaseUrl) return;
     fetch(`${apiBaseUrl}/api/v1/modules/communication/messages`)
-      .then((response) => response.json())
+      .then(async (response) => {
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(body.detail || `Request failed (${response.status})`);
+        }
+        setError(null);
+        return response.json();
+      })
       .then((result: MessagesResponse) => setData(result))
-      .catch(() => undefined);
+      .catch((err: Error) => setError(err.message));
   }, [apiBaseUrl]);
 
   useEffect(() => {
@@ -128,7 +137,9 @@ export default function CommunicationWidget({ eventBus, apiBaseUrl }: Communicat
         <CardSubtitle>{data?.configured ? (unreadCount > 0 ? `${unreadCount} unread` : "All caught up") : ""}</CardSubtitle>
       </CardHeader>
 
-      {data === null ? (
+      {error ? (
+        <CardError message={error} onRetry={refresh} />
+      ) : data === null ? (
         <CardLoading />
       ) : !data.configured ? (
         <CardEmpty icon="mail" message="Gmail isn't connected yet - see modules/communication/README.md." />

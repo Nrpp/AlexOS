@@ -7,6 +7,7 @@ import {
   CardContent,
   CardEmpty,
   CardLoading,
+  CardError,
   CardFooter,
   Input,
   Button,
@@ -30,18 +31,28 @@ export interface TasksWidgetProps {
 }
 
 /** Real tasks via Google Tasks - see the module README to connect
- * yours. Refetches on task.created/task.completed rather than patching
- * local state, so it stays correct no matter where a task was created. */
+ * yours. Refetches on task.created/task.completed for instant feedback
+ * on actions taken here, and on tasks.updated (a background poll every
+ * ~60s - see modules/tasks/backend/__init__.py) so a task added or
+ * completed outside AlexOS shows up without a manual page reload. */
 export default function TasksWidget({ eventBus, apiBaseUrl }: TasksWidgetProps) {
   const [data, setData] = useState<TasksResponse | null>(null);
   const [newTitle, setNewTitle] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     if (!apiBaseUrl) return;
     fetch(`${apiBaseUrl}/api/v1/modules/tasks/tasks`)
-      .then((response) => response.json())
+      .then(async (response) => {
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(body.detail || `Request failed (${response.status})`);
+        }
+        setError(null);
+        return response.json();
+      })
       .then((result: TasksResponse) => setData(result))
-      .catch(() => undefined);
+      .catch((err: Error) => setError(err.message));
   }, [apiBaseUrl]);
 
   useEffect(() => {
@@ -50,6 +61,7 @@ export default function TasksWidget({ eventBus, apiBaseUrl }: TasksWidgetProps) 
 
   useEventBus(eventBus, "task.created", refresh);
   useEventBus(eventBus, "task.completed", refresh);
+  useEventBus(eventBus, "tasks.updated", (payload) => setData(payload as TasksResponse));
 
   const addTask = async () => {
     const title = newTitle.trim();
@@ -89,7 +101,9 @@ export default function TasksWidget({ eventBus, apiBaseUrl }: TasksWidgetProps) 
         <CardTitle>Today&apos;s tasks</CardTitle>
       </CardHeader>
 
-      {data === null ? (
+      {error ? (
+        <CardError message={error} onRetry={refresh} />
+      ) : data === null ? (
         <CardLoading />
       ) : !data.configured ? (
         <CardEmpty icon="task_alt" message="Google Tasks isn't connected yet - see modules/tasks/README.md." />

@@ -25,13 +25,18 @@ different one.
 - **Backend** (`backend/`): `GET /api/v1/modules/tasks/tasks` (list,
   incomplete first), `POST /tasks` (create, publishes `task.created`),
   `PATCH /tasks/{id}` (toggle, publishes `task.completed` when marked
-  done). All backed by the real Google Tasks API - no `on_load`
-  background work, since it's entirely request-driven.
+  done). `on_load` also polls every `config.json`'s
+  `tickIntervalSeconds` (60s default) and publishes `tasks.updated`
+  (retained) - **this is the fix for tasks not appearing without a
+  manual reload**: previously a task added in the Google Tasks app
+  itself (not through AlexOS) had no way to reach the widget until the
+  page was reloaded, since nothing was watching for external changes.
 - **Frontend** (`frontend/index.tsx`): a `TasksWidget` with an inline
-  add-task input and a tap-to-complete list. Refetches on
-  `task.created`/`task.completed` rather than patching local state, so
-  it stays correct no matter where a task was created (its own input,
-  Home's Quick Actions, or the Google Tasks app itself on next refresh).
+  add-task input and a tap-to-complete list. Refetches instantly on its
+  own `task.created`/`task.completed` actions, and on `tasks.updated`
+  for changes made anywhere else. A real failure now shows the actual
+  error message with a retry button instead of silently looking like
+  "not connected."
 
 ## Scope
 
