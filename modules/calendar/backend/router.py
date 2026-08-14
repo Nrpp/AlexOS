@@ -3,6 +3,8 @@ from __future__ import annotations
 import httpx
 from fastapi import APIRouter, HTTPException
 
+from app.core.google_auth import GoogleAuthExpiredError
+
 from .state import CalendarConfigError, event_to_payload, list_today_events
 
 router = APIRouter()
@@ -12,6 +14,8 @@ router = APIRouter()
 async def get_today_events() -> dict:
     try:
         events = await list_today_events()
+    except GoogleAuthExpiredError as error:
+        raise HTTPException(status_code=401, detail=str(error)) from error
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail="Couldn't reach Google Calendar.") from error
     except CalendarConfigError as error:

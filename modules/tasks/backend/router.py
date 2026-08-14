@@ -4,6 +4,8 @@ import httpx
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from app.core.google_auth import GoogleAuthExpiredError
+
 from .state import create_task, list_tasks, set_completed, task_to_payload
 
 router = APIRouter()
@@ -21,6 +23,8 @@ class UpdateTaskRequest(BaseModel):
 async def get_tasks() -> dict:
     try:
         tasks = await list_tasks()
+    except GoogleAuthExpiredError as error:
+        raise HTTPException(status_code=401, detail=str(error)) from error
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail="Couldn't reach Google Tasks.") from error
     if tasks is None:
@@ -32,6 +36,8 @@ async def get_tasks() -> dict:
 async def post_task(body: CreateTaskRequest, request: Request) -> dict:
     try:
         task = await create_task(body.title)
+    except GoogleAuthExpiredError as error:
+        raise HTTPException(status_code=401, detail=str(error)) from error
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail="Couldn't reach Google Tasks.") from error
     if task is None:
@@ -45,6 +51,8 @@ async def post_task(body: CreateTaskRequest, request: Request) -> dict:
 async def patch_task(task_id: str, body: UpdateTaskRequest, request: Request) -> dict:
     try:
         task = await set_completed(task_id, body.completed)
+    except GoogleAuthExpiredError as error:
+        raise HTTPException(status_code=401, detail=str(error)) from error
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail="Couldn't reach Google Tasks.") from error
     if task is None:

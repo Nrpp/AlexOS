@@ -14,6 +14,7 @@ from typing import Any
 import httpx
 
 from app.core.event_bus import EventBus
+from app.core.google_auth import GoogleAuthExpiredError
 
 from .router import router
 from .state import configure, list_tasks, task_to_payload
@@ -38,6 +39,12 @@ async def _tick_forever(event_bus: EventBus, interval_seconds: float) -> None:
             if tasks is not None:
                 payload = {"configured": True, "tasks": [task_to_payload(task) for task in tasks]}
                 await event_bus.publish("tasks.updated", payload, source="tasks", retain=True)
+        except GoogleAuthExpiredError as error:
+            # A real bug this fixes: this except clause used to only
+            # catch httpx.HTTPError, so this (plain Exception subclass)
+            # would propagate uncaught and silently kill this loop
+            # forever - no more polling until the app restarts.
+            logger.warning(str(error))
         except httpx.HTTPError:
             logger.exception("Failed to poll Google Tasks")
         await asyncio.sleep(interval_seconds)

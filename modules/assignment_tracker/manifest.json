@@ -1,0 +1,17 @@
+{
+  "name": "assignment_tracker",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Track assignments with due dates - check them off as you finish.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "assignment-tracker",
+      "name": "Assignment tracker",
+      "description": "Assignments and due dates, checked off as you finish."
+    }
+  ],
+  "icon": "assignment"
+}

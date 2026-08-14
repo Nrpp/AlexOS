@@ -1,0 +1,17 @@
+{
+  "name": "gpa_whatif",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Scratchpad GPA what-if calculator - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "gpa-whatif",
+      "name": "GPA what-if",
+      "description": "Live weighted GPA from a scratch course list."
+    }
+  ],
+  "icon": "school"
+}

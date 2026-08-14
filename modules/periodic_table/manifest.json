@@ -1,0 +1,17 @@
+{
+  "name": "periodic_table",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Browse and search all 118 chemical elements - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "periodic-table",
+      "name": "Periodic table",
+      "description": "Searchable grid of all 118 elements with details."
+    }
+  ],
+  "icon": "science"
+}

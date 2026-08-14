@@ -1,0 +1,17 @@
+{
+  "name": "times_tables_practice",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Multiplication practice quiz with a running score - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "times-tables-practice",
+      "name": "Times tables practice",
+      "description": "Quiz yourself on multiplication facts 1-12."
+    }
+  ],
+  "icon": "grid_on"
+}

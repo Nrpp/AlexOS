@@ -1,0 +1,17 @@
+{
+  "name": "base_converter",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Convert numbers between binary, octal, decimal, and hex - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "base-converter",
+      "name": "Base converter",
+      "description": "Binary, octal, decimal, and hexadecimal conversion."
+    }
+  ],
+  "icon": "pin"
+}

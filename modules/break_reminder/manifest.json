@@ -1,0 +1,17 @@
+{
+  "name": "break_reminder",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Pomodoro-style work and break interval timer - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "break-reminder",
+      "name": "Break reminder",
+      "description": "Work and break interval timer with notifications."
+    }
+  ],
+  "icon": "timer"
+}

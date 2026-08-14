@@ -1,0 +1,17 @@
+{
+  "name": "science_constants",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Look up real physical and scientific constants - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "science-constants",
+      "name": "Science constants",
+      "description": "Searchable reference of physical constants."
+    }
+  ],
+  "icon": "functions"
+}

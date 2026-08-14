@@ -1,0 +1,17 @@
+{
+  "name": "calculator",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Standard basic calculator - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "calculator",
+      "name": "Calculator",
+      "description": "Basic arithmetic calculator."
+    }
+  ],
+  "icon": "calculate"
+}

@@ -6,6 +6,7 @@ import { useCore } from "../../core/useCore";
 import { PagePlaceholder } from "../../components/PagePlaceholder";
 import { widgetRegistry } from "../../modules/registry";
 import { DEFAULT_HOME_MODULE_NAMES } from "../../core/defaultHomeWidgets";
+import { useAutoTheme } from "../../core/useAutoTheme";
 
 // weather/calendar/tasks always have their own fixed cards on Home
 // (see apps/web/src/pages/Home/index.tsx's DedicatedWidgetSlot) -
@@ -15,6 +16,7 @@ const ALWAYS_DEDICATED_MODULE_NAMES = new Set(["weather", "calendar", "tasks"]);
 
 function AppearanceCard() {
   const { theme, setTheme } = useTheme();
+  const { enabled: autoTheme, setEnabled: setAutoTheme } = useAutoTheme();
 
   return (
     <Card>
@@ -28,13 +30,25 @@ function AppearanceCard() {
         <CardTitle>Appearance</CardTitle>
         <CardSubtitle>Dark and light are both fully supported.</CardSubtitle>
       </CardHeader>
-      <CardContent className="flex items-center justify-between">
-        <span>Dark theme</span>
-        <Toggle
-          checked={theme === "dark"}
-          onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-          label="Toggle dark theme"
-        />
+      <CardContent className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span>Automatic day/night theme</span>
+            <p className="text-caption text-text-secondary">
+              Switches at sunset/sunrise for Weather's configured location.
+            </p>
+          </div>
+          <Toggle checked={autoTheme} onCheckedChange={setAutoTheme} label="Toggle automatic day/night theme" />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className={autoTheme ? "text-text-secondary" : undefined}>Dark theme</span>
+          <Toggle
+            checked={theme === "dark"}
+            onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+            disabled={autoTheme}
+            label="Toggle dark theme"
+          />
+        </div>
       </CardContent>
     </Card>
   );

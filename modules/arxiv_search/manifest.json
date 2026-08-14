@@ -1,0 +1,17 @@
+{
+  "name": "arxiv_search",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Search academic papers on arXiv (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/search"],
+  "widgets": [
+    {
+      "id": "arxiv-search",
+      "name": "arXiv search",
+      "description": "Real academic paper search."
+    }
+  ],
+  "icon": "science"
+}

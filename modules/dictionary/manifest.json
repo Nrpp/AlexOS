@@ -1,0 +1,17 @@
+{
+  "name": "dictionary",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Look up word definitions via the Free Dictionary API (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/lookup"],
+  "widgets": [
+    {
+      "id": "dictionary",
+      "name": "Dictionary",
+      "description": "Real word definitions, pronunciations, and examples."
+    }
+  ],
+  "icon": "menu_book"
+}

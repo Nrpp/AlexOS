@@ -1,0 +1,17 @@
+{
+  "name": "reading_speed",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Estimate reading time for pasted text - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "reading-speed",
+      "name": "Reading speed",
+      "description": "Word count and estimated reading time."
+    }
+  ],
+  "icon": "menu_book"
+}

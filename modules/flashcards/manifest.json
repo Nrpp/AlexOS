@@ -1,0 +1,17 @@
+{
+  "name": "flashcards",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Study flashcards - add front/back pairs, flip to reveal the answer.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "flashcards",
+      "name": "Flashcards",
+      "description": "Add cards and flip them to test yourself."
+    }
+  ],
+  "icon": "style"
+}

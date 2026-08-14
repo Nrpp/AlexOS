@@ -133,6 +133,25 @@ membership) in favor of Google Cast for Media.
 - [x] Fixed a real bug: module tick-loop background tasks were never
       cancelled on shutdown, causing them to pile up (and eventually
       hang) across repeated app instantiations in the test suite.
+- [x] Fixed a real bug: Home's greeting never updated after first
+      render - now ticks every minute.
+- [x] Fixed a real bug: all Google integrations broke together when
+      the OAuth refresh token expired (`invalid_grant`) - now surfaced
+      as a clear 401 via a dedicated `GoogleAuthExpiredError`, and a
+      second real bug (Tasks' poll loop dying silently on this exact
+      error) fixed along the way. The underlying fix - a fresh token
+      via `scripts/google_oauth_setup.py`, plus switching the OAuth
+      consent screen out of "Testing" status - is on the user.
+- [x] Automatic day/night theme - switches light/dark at real
+      sunrise/sunset for the configured location, toggle in Settings.
+- [x] 30 additional Study page modules (see CHANGELOG for the full
+      list) - a dictionary, thesaurus, Wikipedia summaries, arXiv
+      search, and a trivia quiz backed by real public APIs; 14 fully
+      client-side study tools (periodic table, calculator, unit/base/
+      Roman-numeral converters, typing and reading speed tests, a
+      Pomodoro-style break reminder, and more); and 11 modules for
+      real persisted study data (flashcards, class schedule, grade
+      tracker, assignment tracker, vocabulary builder, and more).
 
 ## 0.3.0 — Persistence and real telemetry
 

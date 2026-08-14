@@ -1,0 +1,17 @@
+{
+  "name": "cornell_notes",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Notes using the Cornell method - cues, notes, and summary.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "cornell-notes",
+      "name": "Cornell notes",
+      "description": "Notes using the Cornell note-taking method."
+    }
+  ],
+  "icon": "note_alt"
+}

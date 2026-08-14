@@ -51,6 +51,8 @@ class WeatherReading:
     low: float
     location: str
     units: str
+    sunrise: str
+    sunset: str
 
 
 def reading_to_payload(reading: WeatherReading) -> dict[str, Any]:
@@ -62,6 +64,12 @@ def reading_to_payload(reading: WeatherReading) -> dict[str, Any]:
         "low": reading.low,
         "location": reading.location,
         "units": reading.units,
+        # ISO 8601, already in the location's local time (timezone=auto
+        # below) - used by the frontend's automatic day/night theme
+        # switching (apps/web/src/core/useAutoTheme.ts) as well as shown
+        # here in the widget.
+        "sunrise": reading.sunrise,
+        "sunset": reading.sunset,
     }
 
 
@@ -85,7 +93,7 @@ class OpenMeteoProvider:
             "latitude": self.latitude,
             "longitude": self.longitude,
             "current": "temperature_2m,weather_code",
-            "daily": "temperature_2m_max,temperature_2m_min",
+            "daily": "temperature_2m_max,temperature_2m_min,sunrise,sunset",
             "temperature_unit": "fahrenheit" if self.units == "imperial" else "celsius",
             "timezone": "auto",
             "forecast_days": 1,
@@ -109,6 +117,8 @@ class OpenMeteoProvider:
             low=round(data["daily"]["temperature_2m_min"][0], 1),
             location=self.location,
             units=self.units,
+            sunrise=data["daily"]["sunrise"][0],
+            sunset=data["daily"]["sunset"][0],
         )
         self._last_reading = reading
         return reading

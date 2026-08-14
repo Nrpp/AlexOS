@@ -1,0 +1,17 @@
+{
+  "name": "wikipedia_summary",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Look up a Wikipedia article summary (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/summary"],
+  "widgets": [
+    {
+      "id": "wikipedia-summary",
+      "name": "Wikipedia",
+      "description": "Real article summaries from Wikipedia."
+    }
+  ],
+  "icon": "public"
+}

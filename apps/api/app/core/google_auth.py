@@ -18,6 +18,22 @@ import httpx
 _TOKEN_URL = "https://oauth2.googleapis.com/token"
 
 
+class GoogleAuthExpiredError(Exception):
+    """Raised when Google rejects the refresh token itself (`invalid_grant`)
+    - distinct from a network/API failure (httpx.HTTPError) or "not
+    configured" (get_access_token returning None), so callers can show
+    an actionable message instead of a generic "couldn't reach X."
+
+    The most common cause: the OAuth consent screen is still in
+    "Testing" publishing status in Google Cloud Console, where Google
+    auto-expires refresh tokens after 7 days regardless of use. Fix:
+    re-run scripts/google_oauth_setup.py for a fresh token, then switch
+    the consent screen to "In production" (Cloud Console -> APIs &
+    Services -> OAuth consent screen) so this doesn't recur - publishing
+    a single-user personal app doesn't require Google's app verification
+    review, just the publishing-status toggle."""
+
+
 class GoogleAuth:
     def __init__(self) -> None:
         self.client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
@@ -48,6 +64,13 @@ class GoogleAuth:
                     "grant_type": "refresh_token",
                 },
             )
+            if response.status_code == 400 and "invalid_grant" in response.text:
+                raise GoogleAuthExpiredError(
+                    "Google rejected the refresh token (invalid_grant) - it's expired or was revoked. "
+                    "Re-run scripts/google_oauth_setup.py for a fresh one, then see "
+                    "apps/api/app/core/google_auth.py's GoogleAuthExpiredError docstring to stop this "
+                    "from recurring every 7 days."
+                )
             response.raise_for_status()
             data = response.json()
 

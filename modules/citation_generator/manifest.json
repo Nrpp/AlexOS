@@ -1,0 +1,17 @@
+{
+  "name": "citation_generator",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Generate APA and MLA citations from a source - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "citation-generator",
+      "name": "Citation generator",
+      "description": "Live APA and MLA citation formatting."
+    }
+  ],
+  "icon": "format_quote"
+}

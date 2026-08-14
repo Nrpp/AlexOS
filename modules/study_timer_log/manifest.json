@@ -1,0 +1,17 @@
+{
+  "name": "study_timer_log",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Log study sessions by subject and track total time studied.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "study-timer-log",
+      "name": "Study timer log",
+      "description": "Log study sessions and track total time."
+    }
+  ],
+  "icon": "hourglass_bottom"
+}

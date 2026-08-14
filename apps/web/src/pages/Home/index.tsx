@@ -26,6 +26,7 @@ const GREETINGS: Record<ReturnType<typeof getDayPart>, string> = {
 function Greeting() {
   const { apiClient } = useCore();
   const [userName, setUserName] = useState("there");
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     let cancelled = false;
@@ -40,7 +41,15 @@ function Greeting() {
     };
   }, [apiClient]);
 
-  const dayPart = getDayPart(new Date());
+  // Home is meant to stay open for hours on a kiosk display - without
+  // this, getDayPart was computed once on mount and never again, so
+  // "Good morning" would still be showing well into the evening.
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const dayPart = getDayPart(now);
 
   return (
     <div>

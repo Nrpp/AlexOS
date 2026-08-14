@@ -1,0 +1,17 @@
+{
+  "name": "study_goals",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Track your study goals - add them, check them off.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "study-goals",
+      "name": "Study goals",
+      "description": "Goals to work toward, check off as you go."
+    }
+  ],
+  "icon": "flag"
+}

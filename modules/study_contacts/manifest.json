@@ -1,0 +1,17 @@
+{
+  "name": "study_contacts",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Classmates and study partners, with subject and contact info.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "study-contacts",
+      "name": "Study contacts",
+      "description": "Classmates and study partners."
+    }
+  ],
+  "icon": "contacts"
+}

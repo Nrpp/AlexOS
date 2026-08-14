@@ -11,6 +11,12 @@ interface WeatherReading {
   low: number;
   location: string;
   units: "metric" | "imperial";
+  sunrise: string;
+  sunset: string;
+}
+
+function formatSunTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
 export interface WeatherWidgetProps {
@@ -72,6 +78,20 @@ export default function WeatherWidget({ eventBus, apiBaseUrl }: WeatherWidgetPro
             <span className="text-caption text-text-secondary">
               {capitalize(reading.condition)} &middot; H:{Math.round(reading.high)}&deg; L:
               {Math.round(reading.low)}&deg;
+            </span>
+          </div>
+          <div className="mt-2 flex items-center gap-3 text-caption text-text-secondary">
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-rounded text-sm" aria-hidden>
+                wb_twilight
+              </span>
+              {formatSunTime(reading.sunrise)}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-rounded text-sm" aria-hidden>
+                bedtime
+              </span>
+              {formatSunTime(reading.sunset)}
             </span>
           </div>
         </CardContent>

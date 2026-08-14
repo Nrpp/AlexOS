@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from app.core.event_bus import EventBus
+from app.core.google_auth import GoogleAuthExpiredError
 
 from .router import router
 from .state import message_to_payload, poll_for_new_messages
@@ -29,6 +30,8 @@ async def _poll_forever(event_bus: EventBus, interval_seconds: float) -> None:
         try:
             for message in await poll_for_new_messages():
                 await event_bus.publish("mail.received", message_to_payload(message), source="communication")
+        except GoogleAuthExpiredError as error:
+            logger.warning(str(error))
         except Exception:
             logger.exception("Failed to poll Gmail")
         await asyncio.sleep(interval_seconds)

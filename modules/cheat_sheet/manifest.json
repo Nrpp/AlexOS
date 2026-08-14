@@ -1,0 +1,17 @@
+{
+  "name": "cheat_sheet",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Quick reference notes and formulas, organized by title.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "cheat-sheet",
+      "name": "Cheat sheet",
+      "description": "Quick reference notes and formulas."
+    }
+  ],
+  "icon": "sticky_note_2"
+}

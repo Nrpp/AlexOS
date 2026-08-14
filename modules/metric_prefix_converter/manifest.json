@@ -1,0 +1,17 @@
+{
+  "name": "metric_prefix_converter",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Convert numbers between metric prefixes - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "metric-prefix-converter",
+      "name": "Metric prefix converter",
+      "description": "Convert values between pico and tera."
+    }
+  ],
+  "icon": "swap_vert"
+}

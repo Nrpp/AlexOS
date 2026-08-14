@@ -1,0 +1,17 @@
+{
+  "name": "grade_tracker",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Track scores per assignment and see your overall average.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "grade-tracker",
+      "name": "Grade tracker",
+      "description": "Log scores and track your overall average."
+    }
+  ],
+  "icon": "grade"
+}

@@ -6,6 +6,7 @@ import { StatusBar } from "./StatusBar/StatusBar";
 import { Dock } from "./Dock/Dock";
 import { NotificationsLayer } from "./NotificationsLayer";
 import { DialogsLayer } from "./DialogsLayer";
+import { useAutoTheme } from "../core/useAutoTheme";
 
 /**
  * The fixed structure every AlexOS screen follows: Status Bar, Main
@@ -14,6 +15,10 @@ import { DialogsLayer } from "./DialogsLayer";
 export function AppShell() {
   const location = useLocation();
   const element = useOutlet();
+  // Mounted once here (not per-page) so automatic day/night theme
+  // switching keeps running no matter which page is showing - see
+  // useAutoTheme.ts. Settings' toggle controls the same shared flag.
+  useAutoTheme();
 
   return (
     <DialogsLayer>

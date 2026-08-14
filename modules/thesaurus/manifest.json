@@ -1,0 +1,17 @@
+{
+  "name": "thesaurus",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Find synonyms via the Datamuse API (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/synonyms"],
+  "widgets": [
+    {
+      "id": "thesaurus",
+      "name": "Thesaurus",
+      "description": "Real synonyms for a word."
+    }
+  ],
+  "icon": "sync_alt"
+}

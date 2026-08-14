@@ -1,0 +1,17 @@
+{
+  "name": "mnemonic_generator",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Generate a memory sentence from a list of items - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "mnemonic-generator",
+      "name": "Mnemonic generator",
+      "description": "Turns a list of items into a memorable sentence."
+    }
+  ],
+  "icon": "psychology"
+}

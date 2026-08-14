@@ -1,0 +1,17 @@
+{
+  "name": "vocabulary_builder",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Build your vocabulary with word and definition pairs.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "vocabulary-builder",
+      "name": "Vocabulary builder",
+      "description": "Words and definitions you're learning."
+    }
+  ],
+  "icon": "translate"
+}

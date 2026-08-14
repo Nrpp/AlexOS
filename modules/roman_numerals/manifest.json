@@ -1,0 +1,17 @@
+{
+  "name": "roman_numerals",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Convert between numbers and Roman numerals - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "roman-numerals",
+      "name": "Roman numerals",
+      "description": "Two-way number and Roman numeral converter."
+    }
+  ],
+  "icon": "looks_one"
+}

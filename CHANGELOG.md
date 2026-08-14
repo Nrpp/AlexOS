@@ -6,6 +6,66 @@ All notable changes to AlexOS are documented in this file.
 
 ### Added
 
+- **30 new Study page modules** - same "real data or honest client-side
+  logic, never simulated" bar as the earlier Utilities batch:
+  - Real public APIs (no key needed): `modules/dictionary` (Free
+    Dictionary API), `modules/thesaurus` (Datamuse), `modules/wikipedia_summary`
+    (Wikipedia REST API), `modules/arxiv_search` (arXiv Atom feed, parsed
+    server-side with the standard library), `modules/trivia_quiz` (Open
+    Trivia DB, HTML-entity-decoded).
+  - Fully client-side, real deterministic logic, no backend:
+    `modules/periodic_table` (all 118 elements), `modules/science_constants`,
+    `modules/citation_generator` (real APA/MLA formatting), `modules/calculator`
+    (hand-rolled expression state machine, no `eval()`), `modules/metric_prefix_converter`,
+    `modules/base_converter`, `modules/roman_numerals` (real subtractive-notation
+    algorithm both directions), `modules/typing_speed_test`, `modules/reading_speed`,
+    `modules/study_break_suggester`, `modules/gpa_whatif` (scratchpad, not
+    persisted - intentional), `modules/mnemonic_generator`, `modules/times_tables_practice`,
+    `modules/break_reminder` (Pomodoro-style, browser `Notification` on phase change).
+  - Real persisted personal data via the generic module-data table:
+    `modules/flashcards`, `modules/class_schedule`, `modules/grade_tracker`
+    (live weighted average), `modules/study_timer_log`, `modules/course_list`,
+    `modules/assignment_tracker`, `modules/vocabulary_builder`, `modules/cheat_sheet`,
+    `modules/study_contacts`, `modules/cornell_notes`, `modules/study_goals`.
+  - Wired into the Study page (`apps/web/src/pages/Study/index.tsx`)
+    alongside the existing Pomodoro/Focus modules. Verified live: all 30
+    render on the Study page, `GET /api/v1/system/health` reports 64
+    modules loaded, a full backend CRUD round-trip (create/toggle/list/delete)
+    was exercised against the persisted modules, and the real-API modules
+    (dictionary, trivia) returned genuine live data in the browser.
+- **Automatic day/night theme** (Settings) - switches the app between
+  light and dark automatically at real sunrise/sunset for the
+  configured location, reusing the Weather module's existing Open-Meteo
+  `daily` sunrise/sunset fields rather than a new endpoint. A Settings
+  toggle turns it on/off (on by default); the manual dark-theme toggle
+  is disabled while automatic mode is active. Verified live: theme
+  correctly resolved to light at 13:37 with a 07:24 sunrise / 21:14
+  sunset.
+
+### Fixed
+
+- Home's greeting ("Good morning"/"Good afternoon"/...) was computed
+  once per render and never updated again without a manual reload -
+  now ticks every minute like the Status Bar clock.
+- **All Google integrations (Calendar/Gmail/Tasks) breaking together
+  after working fine before** - root cause was `invalid_grant` on
+  token refresh, almost always caused by the OAuth consent screen
+  still being in "Testing" publishing status in Google Cloud Console
+  (refresh tokens there auto-expire after 7 days regardless of use).
+  Added a dedicated `GoogleAuthExpiredError` (`apps/api/app/core/google_auth.py`)
+  raised specifically for this case, with actionable detail surfaced
+  through Calendar/Tasks/Communication's endpoints as a 401 instead of
+  a generic 500. While adding this, found and fixed a real latent bug:
+  the Tasks module's background poll loop only caught `httpx.HTTPError`,
+  so this exact error (a plain `Exception` subclass) would have
+  propagated uncaught and silently killed Tasks polling forever - now
+  caught and logged like Calendar/Communication already did. The
+  underlying fix (a fresh token + switching the consent screen to
+  "In production") is on the user, not further code - documented in
+  the exception's own docstring.
+
+### Added
+
 - **Utilities page** (`apps/web/src/pages/Utilities`) - the 20 modules
   below moved here from Home's "Favorite widgets" catch-all, which was
   turning into a dump of everything installed. New Dock entry.

@@ -1,0 +1,17 @@
+{
+  "name": "course_list",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Your enrolled courses - name, professor, and credits.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "course-list",
+      "name": "Course list",
+      "description": "Track the courses you're enrolled in."
+    }
+  ],
+  "icon": "menu_book"
+}

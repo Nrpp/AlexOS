@@ -12,6 +12,7 @@ import logging
 from typing import Any
 
 from app.core.event_bus import EventBus
+from app.core.google_auth import GoogleAuthExpiredError
 
 from .router import router
 from .state import CalendarConfigError, configure, event_to_payload, list_today_events
@@ -38,6 +39,10 @@ async def _tick_forever(event_bus: EventBus, interval_seconds: float) -> None:
                 await event_bus.publish("calendar.updated", payload, source="calendar", retain=True)
         except CalendarConfigError:
             logger.exception("Calendar misconfigured - check modules/calendar/config.json")
+        except GoogleAuthExpiredError as error:
+            # A one-line warning, not a full traceback repeated every
+            # tick until the user re-runs the OAuth setup script.
+            logger.warning(str(error))
         except Exception:
             logger.exception("Failed to poll Google Calendar")
         await asyncio.sleep(interval_seconds)

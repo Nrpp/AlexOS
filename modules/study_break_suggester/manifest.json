@@ -1,0 +1,17 @@
+{
+  "name": "study_break_suggester",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Suggests a random short break activity - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "study-break-suggester",
+      "name": "Study break suggester",
+      "description": "Random break activity with an optional countdown."
+    }
+  ],
+  "icon": "self_improvement"
+}

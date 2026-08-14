@@ -1,0 +1,17 @@
+{
+  "name": "class_schedule",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Your weekly class schedule - class, day, time, and location.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/items"],
+  "widgets": [
+    {
+      "id": "class-schedule",
+      "name": "Class schedule",
+      "description": "Weekly classes sorted by day and time."
+    }
+  ],
+  "icon": "event"
+}

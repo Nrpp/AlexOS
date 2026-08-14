@@ -1,0 +1,17 @@
+{
+  "name": "typing_speed_test",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Measure typing speed and accuracy - fully client-side.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "typing-speed-test",
+      "name": "Typing speed test",
+      "description": "Live WPM and accuracy while retyping a passage."
+    }
+  ],
+  "icon": "keyboard"
+}

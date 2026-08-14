@@ -1,0 +1,17 @@
+{
+  "name": "trivia_quiz",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "A trivia question via the Open Trivia Database (no API key needed).",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/question"],
+  "widgets": [
+    {
+      "id": "trivia-quiz",
+      "name": "Trivia quiz",
+      "description": "A random trivia question, refreshable on demand."
+    }
+  ],
+  "icon": "quiz"
+}
