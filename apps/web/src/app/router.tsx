@@ -6,6 +6,7 @@ import { AppShell } from "../layout/AppShell";
 // anything on first paint - per the performance rules, nothing heavy
 // loads before it's needed.
 const HomePage = lazy(() => import("../pages/Home"));
+const AlexPage = lazy(() => import("../pages/Alex"));
 const StudyPage = lazy(() => import("../pages/Study"));
 const ServersPage = lazy(() => import("../pages/Servers"));
 const NetworkPage = lazy(() => import("../pages/Network"));
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { path: "/", element: <HomePage /> },
+      { path: "/alex", element: <AlexPage /> },
       { path: "/study", element: <StudyPage /> },
       { path: "/servers", element: <ServersPage /> },
       { path: "/network", element: <NetworkPage /> },

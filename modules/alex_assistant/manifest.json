@@ -1,0 +1,22 @@
+{
+  "name": "alex_assistant",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Live link to the Alex personal assistant (Proyect-ALEX, running on its own Raspberry Pi) - notifications, reminders, and system status.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/status", "/reminders"],
+  "widgets": [
+    {
+      "id": "alex-assistant",
+      "name": "Alex",
+      "description": "Connection state and pending reminders."
+    },
+    {
+      "id": "alex-assistant-status",
+      "name": "Alex Status",
+      "description": "AI provider, tools, and plugin health."
+    }
+  ],
+  "icon": "smart_toy"
+}

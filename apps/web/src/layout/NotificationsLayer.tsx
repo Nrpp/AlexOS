@@ -16,6 +16,52 @@ const PRIORITY_STYLES: Record<NotificationPayload["priority"], string> = {
   success: "border-success/40 bg-success/10",
 };
 
+const PRIORITY_TONE: Record<NotificationPayload["priority"], { frequency: number; durationMs: number; repeats: number }> = {
+  critical: { frequency: 880, durationMs: 180, repeats: 3 },
+  warning: { frequency: 660, durationMs: 160, repeats: 2 },
+  information: { frequency: 520, durationMs: 140, repeats: 1 },
+  success: { frequency: 740, durationMs: 140, repeats: 1 },
+};
+
+let audioContext: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (typeof window === "undefined" || !window.AudioContext) return null;
+  if (!audioContext) audioContext = new AudioContext();
+  return audioContext;
+}
+
+/**
+ * A small synthesized chime, not an audio asset - keeps the bundle free
+ * of binary files and sounds identical for every notification source (a
+ * module event, a reminder, ...). Browsers block audio before any user
+ * gesture on the page; on a touch kiosk that gesture has almost always
+ * already happened by the time a notification fires, and if it hasn't,
+ * this just stays silent rather than throwing.
+ */
+function playNotificationSound(priority: NotificationPayload["priority"]): void {
+  const context = getAudioContext();
+  if (!context) return;
+  if (context.state === "suspended") {
+    void context.resume().catch(() => undefined);
+  }
+  const { frequency, durationMs, repeats } = PRIORITY_TONE[priority];
+  for (let i = 0; i < repeats; i += 1) {
+    const startAt = context.currentTime + i * (durationMs / 1000) * 1.4;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = frequency;
+    gain.gain.setValueAtTime(0, startAt);
+    gain.gain.linearRampToValueAtTime(0.15, startAt + 0.015);
+    gain.gain.linearRampToValueAtTime(0, startAt + durationMs / 1000);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(startAt);
+    oscillator.stop(startAt + durationMs / 1000 + 0.02);
+  }
+}
+
 /**
  * Notifications never interrupt: they slide from the top and disappear
  * on their own, except critical ones, which stay until dismissed.
@@ -31,6 +77,12 @@ export function NotificationsLayer() {
   useEventBus(eventBus, "notification.created", (payload) => {
     const notification = payload as NotificationPayload;
     setNotifications((current) => [...current, notification]);
+    try {
+      playNotificationSound(notification.priority);
+    } catch {
+      // A sound failure (blocked autoplay, no AudioContext, ...) must
+      // never take the visible notification down with it.
+    }
     if (notification.priority !== "critical") {
       setTimeout(() => dismiss(notification.id), AUTO_DISMISS_MS);
     }

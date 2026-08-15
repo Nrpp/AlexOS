@@ -1,0 +1,5 @@
+{
+  "statusPollIntervalSeconds": 30,
+  "reconnectMinDelaySeconds": 2,
+  "reconnectMaxDelaySeconds": 30
+}
