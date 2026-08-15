@@ -6,23 +6,37 @@ Raspberry Pi (separate device and separate repo from AlexOS).
 
 ## Setup
 
-1. On the Alex Pi, make sure `alex/server` is reachable from the AlexOS
-   Pi (same LAN, or Tailscale) and note its base URL, e.g.
-   `http://alex-pi.local:8787`.
-2. If Proyect-ALEX has `ALEX_API_TOKEN` set (recommended - see its own
+**Same Raspberry Pi as Proyect-ALEX (the common case):** production's
+`docker/docker-compose.yml` runs the `api` container with
+`network_mode: host` (see its comments - needed for `modules/media`'s
+mDNS discovery anyway), so the container shares the Pi's network
+namespace directly. `127.0.0.1` inside it *is* the Pi, so this is all
+that's needed:
+
+```bash
+ALEX_ASSISTANT_BASE_URL=http://127.0.0.1:8787
+ALEX_ASSISTANT_API_TOKEN=<same value as Proyect-ALEX's ALEX_API_TOKEN>
+```
+
+**Proyect-ALEX on a different device:** point at its hostname/IP instead
+(same LAN, or Tailscale), e.g. `http://alex-pi.local:8787`.
+
+**Dev mode** (`docker/docker-compose.dev.yml`) does *not* use host
+networking - `127.0.0.1` there is the container itself, not the host.
+Either run the API outside Docker for dev (`./scripts/dev.sh`, which
+needs no special-casing at all), or use the actual Pi/host LAN IP.
+
+Either way:
+
+1. If Proyect-ALEX has `ALEX_API_TOKEN` set (recommended - see its own
    `.env.example`), copy that same value here too; the two tokens must
    match, since it's Proyect-ALEX that validates it.
-3. Add both to your own `.env` on the AlexOS Pi (never commit this file,
-   never paste the token anywhere else):
-
-   ```bash
-   ALEX_ASSISTANT_BASE_URL=http://alex-pi.local:8787
-   ALEX_ASSISTANT_API_TOKEN=<same value as Proyect-ALEX's ALEX_API_TOKEN>
-   ```
-
-4. Restart the backend (`docker compose ... up -d --build` or your dev
-   server). `ALEX_ASSISTANT_API_TOKEN` can be left empty if Proyect-ALEX
-   itself has no token configured (its own "insecure local dev" mode) -
+2. Add both values to your own `.env` (never commit this file, never
+   paste the token anywhere else).
+3. Restart the backend (`docker compose ... up -d --build`, or let
+   `./scripts/dev.sh` pick up the env change on its own restart).
+   `ALEX_ASSISTANT_API_TOKEN` can be left empty if Proyect-ALEX itself
+   has no token configured (its own "insecure local dev" mode) -
    otherwise the connection will authenticate but every request will be
    rejected.
 
