@@ -1,0 +1,17 @@
+{
+  "name": "today",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "What's due today and soon - exams, assignments and tasks in one place, pulled live from modules/study, modules/assignment_tracker and modules/tasks.",
+  "permissions": [],
+  "dependencies": ["study", "assignment_tracker", "tasks"],
+  "routes": [],
+  "widgets": [
+    {
+      "id": "today",
+      "name": "Today",
+      "description": "Exams, assignments and tasks, all in one card."
+    }
+  ],
+  "icon": "checklist"
+}

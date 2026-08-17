@@ -25,6 +25,15 @@ const UTILITY_MODULE_NAMES = [
   "water_tracker",
   "bookmarks",
   "shopping_list",
+  "today",
+  "countdown",
+  "alarms",
+  "daily_agenda",
+  "sleep_log",
+  "news",
+  "flight_tracker",
+  "package_tracker",
+  "timezone_planner",
 ];
 
 export default function UtilitiesPage() {

@@ -1,0 +1,17 @@
+{
+  "name": "countdown",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Countdown timers to any custom date - a trip, an exam, a birthday.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/countdowns"],
+  "widgets": [
+    {
+      "id": "countdown",
+      "name": "Countdown",
+      "description": "Days/hours/minutes remaining until your saved events."
+    }
+  ],
+  "icon": "hourglass_top"
+}

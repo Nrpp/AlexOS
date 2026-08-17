@@ -1,0 +1,17 @@
+{
+  "name": "timezone_planner",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Save timezones you deal with often and convert a meeting time across all of them - can also create the real Google Calendar event.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/zones", "/convert", "/meeting"],
+  "widgets": [
+    {
+      "id": "timezone-planner",
+      "name": "Timezones",
+      "description": "Convert a meeting time across your saved timezones."
+    }
+  ],
+  "icon": "public"
+}

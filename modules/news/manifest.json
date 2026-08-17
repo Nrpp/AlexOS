@@ -1,0 +1,17 @@
+{
+  "name": "news",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Today's headlines, fetched on demand - no background polling.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/headlines"],
+  "widgets": [
+    {
+      "id": "news",
+      "name": "News",
+      "description": "Headlines from your configured feeds, fetched when you ask."
+    }
+  ],
+  "icon": "newspaper"
+}

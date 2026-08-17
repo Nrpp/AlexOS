@@ -1,0 +1,17 @@
+{
+  "name": "daily_agenda",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "A quick, local, time-blocked agenda for the day - not synced anywhere, just fast to jot down.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/entries"],
+  "widgets": [
+    {
+      "id": "daily-agenda",
+      "name": "Agenda",
+      "description": "Today's time-blocked schedule."
+    }
+  ],
+  "icon": "event_note"
+}

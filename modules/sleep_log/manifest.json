@@ -1,0 +1,17 @@
+{
+  "name": "sleep_log",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Manually log how much you slept and see a sleep calendar for the month.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/entries"],
+  "widgets": [
+    {
+      "id": "sleep-log",
+      "name": "Sleep",
+      "description": "Log last night's sleep and see the month at a glance."
+    }
+  ],
+  "icon": "bedtime"
+}

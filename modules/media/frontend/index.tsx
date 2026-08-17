@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, CardLoading } from "@alexos/ui";
+import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, CardEmpty, CardLoading } from "@alexos/ui";
 import { useEventBus, type EventBusLike } from "@alexos/hooks";
 
 interface PlayerState {
+  configured: boolean;
   title: string;
   artist: string;
   durationSeconds: number;
@@ -21,7 +22,8 @@ function formatDuration(totalSeconds: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-/** Mock player for now - see the module README for what going real needs. */
+/** Real now-playing/playback control via Spotify - see the module
+ * README (and scripts/spotify_oauth_setup.py) to connect yours. */
 export default function MediaWidget({ eventBus, apiBaseUrl }: MediaWidgetProps) {
   const [state, setState] = useState<PlayerState | null>(null);
 
@@ -48,10 +50,14 @@ export default function MediaWidget({ eventBus, apiBaseUrl }: MediaWidgetProps) 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action }),
     });
-    setState(await response.json());
+    if (response.ok) setState(await response.json());
   };
 
-  const percent = state ? Math.min(100, Math.round((state.positionSeconds / state.durationSeconds) * 100)) : 0;
+  const isPlayingSomething = Boolean(state?.configured && state.title);
+  const percent =
+    isPlayingSomething && state
+      ? Math.min(100, Math.round((state.positionSeconds / Math.max(state.durationSeconds, 1)) * 100))
+      : 0;
 
   return (
     <Card>
@@ -62,10 +68,17 @@ export default function MediaWidget({ eventBus, apiBaseUrl }: MediaWidgetProps) 
           </span>
         }
       >
-        <CardTitle>{state?.title ?? "Media"}</CardTitle>
-        <CardSubtitle>{state?.artist ?? "Nothing playing"}</CardSubtitle>
+        <CardTitle>{isPlayingSomething ? state?.title : "Media"}</CardTitle>
+        {isPlayingSomething ? <CardSubtitle>{state?.artist}</CardSubtitle> : null}
       </CardHeader>
-      {state ? (
+
+      {state === null ? (
+        <CardLoading />
+      ) : !state.configured ? (
+        <CardEmpty icon="music_note" message="Spotify isn't connected yet - see modules/media/README.md." />
+      ) : !isPlayingSomething ? (
+        <CardEmpty icon="music_off" message="Nothing playing right now." />
+      ) : (
         <CardContent className="flex flex-col gap-3">
           <div>
             <div className="h-1.5 rounded-full bg-surface-hover">
@@ -112,8 +125,6 @@ export default function MediaWidget({ eventBus, apiBaseUrl }: MediaWidgetProps) 
             </button>
           </div>
         </CardContent>
-      ) : (
-        <CardLoading />
       )}
     </Card>
   );

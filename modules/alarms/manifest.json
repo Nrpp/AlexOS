@@ -1,0 +1,17 @@
+{
+  "name": "alarms",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Settable alarms - fires a real AlexOS notification when due, even if this module isn't open.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/alarms"],
+  "widgets": [
+    {
+      "id": "alarms",
+      "name": "Alarms",
+      "description": "Alarms that notify you when they're due."
+    }
+  ],
+  "icon": "alarm"
+}
