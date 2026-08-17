@@ -57,5 +57,9 @@ into a 422 with the real reason, so this class of bug can't hide behind
 
 ## Scope
 
-Uses `calendar.readonly` - this module only ever reads events, never
-creates or modifies them.
+This module itself only ever reads events, never creates or modifies them.
+The shared OAuth client's scope is `calendar.events` rather than
+`calendar.readonly`, though - see `scripts/google_oauth_setup.py` - because
+other modules (`flight_tracker`, `package_tracker`, `timezone_planner`, via
+`app.core.google_calendar.create_event`) need write access on the same
+credentials.

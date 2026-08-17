@@ -32,11 +32,14 @@ REDIRECT_PORT = 8765
 REDIRECT_URI = f"http://localhost:{REDIRECT_PORT}/callback"
 
 # Least-privilege scopes for what AlexOS actually does: read/mark-read
-# mail, read-only calendar, and full task read/write (tasks are
-# created and completed from the UI).
+# mail, read/create calendar events (modules/calendar only reads, but
+# flight_tracker/package_tracker/timezone_planner create real events via
+# app.core.google_calendar.create_event - calendar.readonly would 403 on
+# those), and full task read/write (tasks are created and completed from
+# the UI).
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.modify",
-    "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/calendar.events",
     "https://www.googleapis.com/auth/tasks",
 ]
 
