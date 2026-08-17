@@ -1,0 +1,17 @@
+{
+  "name": "package_tracker",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Track packages you're expecting - a tracking link and, if Google Calendar is connected, a real calendar event for the estimated delivery date.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/packages"],
+  "widgets": [
+    {
+      "id": "package-tracker",
+      "name": "Packages",
+      "description": "Packages on their way, with tracking links and delivery reminders."
+    }
+  ],
+  "icon": "local_shipping"
+}

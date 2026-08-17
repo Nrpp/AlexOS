@@ -1,0 +1,17 @@
+{
+  "name": "flight_tracker",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Save flights you're taking - a tracking link and, if Google Calendar is connected, a real calendar event.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": ["/flights"],
+  "widgets": [
+    {
+      "id": "flight-tracker",
+      "name": "Flights",
+      "description": "Saved flights with a tracking link and calendar sync."
+    }
+  ],
+  "icon": "flight"
+}

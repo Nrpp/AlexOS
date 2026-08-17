@@ -30,3 +30,9 @@ def register_notification_rules(event_bus: EventBus, notification_manager: Notif
         )
 
     event_bus.subscribe("alex_assistant.notification", on_alex_notification)
+
+    async def on_alarm_triggered(envelope: dict[str, Any]) -> None:
+        payload = envelope.get("payload") or {}
+        await notification_manager.notify("critical", "Alarm", payload.get("label", "Alarm"))
+
+    event_bus.subscribe("alarms.triggered", on_alarm_triggered)

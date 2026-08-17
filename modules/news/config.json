@@ -1,0 +1,6 @@
+{
+  "feeds": [
+    { "name": "BBC Mundo", "url": "https://feeds.bbci.co.uk/mundo/rss.xml" }
+  ],
+  "maxItemsPerFeed": 6
+}
