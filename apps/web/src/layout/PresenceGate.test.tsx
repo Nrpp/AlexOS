@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CoreContext, type CoreContextValue } from "../core/CoreProvider";
 import { PresenceGate } from "./PresenceGate";
@@ -77,5 +77,36 @@ describe("PresenceGate", () => {
 
     await waitFor(() => expect(screen.getByLabelText("Dashboard locked - tap to unlock")).toBeInTheDocument());
     expect(screen.queryByText("Dashboard content")).not.toBeInTheDocument();
+  });
+
+  it("shows a floating Lock button when away but manually unlocked, not when home", async () => {
+    currentStatus = { locked: false, home: false, primaryDeviceId: "phone-1", pinConfigured: true, devices: [] };
+    renderGated(<div>Dashboard content</div>);
+
+    await waitFor(() => expect(screen.getByLabelText("Lock the dashboard now")).toBeInTheDocument());
+    expect(screen.getByText("Dashboard content")).toBeInTheDocument();
+  });
+
+  it("does not show the floating Lock button while home", async () => {
+    currentStatus = { locked: false, home: true, primaryDeviceId: "phone-1", pinConfigured: true, devices: [] };
+    renderGated(<div>Dashboard content</div>);
+
+    await waitFor(() => expect(screen.getByText("Dashboard content")).toBeInTheDocument());
+    expect(screen.queryByLabelText("Lock the dashboard now")).not.toBeInTheDocument();
+  });
+
+  it("clicking the floating Lock button calls POST /lock", async () => {
+    currentStatus = { locked: false, home: false, primaryDeviceId: "phone-1", pinConfigured: true, devices: [] };
+    renderGated(<div>Dashboard content</div>);
+
+    const lockButton = await screen.findByLabelText("Lock the dashboard now");
+    fireEvent.click(lockButton);
+
+    await waitFor(() =>
+      expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+        expect.stringContaining("/modules/presence/lock"),
+        expect.objectContaining({ method: "POST" }),
+      ),
+    );
   });
 });

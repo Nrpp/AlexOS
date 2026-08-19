@@ -465,7 +465,12 @@ export function PresenceSettings({ apiBaseUrl }: PresenceWidgetProps) {
             </div>
             {error ? <p className="text-caption text-danger">{error}</p> : null}
 
-            {!status.locked ? (
+            {!status.home ? (
+              // Settings is only reachable at all while `locked` is false
+              // (see PresenceGate), so the one case worth a button here is
+              // "away and currently unlocked" - locking while home has no
+              // effect (`locked` requires `!home`, see compute_status), so
+              // that case is hidden rather than shown as a dead button.
               <Button variant="secondary" onClick={lockNow} disabled={busy} className="self-start">
                 <span className="material-symbols-rounded text-lg" aria-hidden>
                   lock
