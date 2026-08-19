@@ -166,6 +166,7 @@ function DeviceRow({
 
   const webhookUrl = (event: "arrive" | "leave") =>
     `${apiBaseUrl}/api/v1/modules/presence/webhook?device_id=${encodeURIComponent(device.id)}&event=${event}&token=${revealed ?? ""}`;
+  const ownTracksHost = `${apiBaseUrl}/api/v1/modules/presence/owntracks`;
 
   const copy = (value: string, label: string) => {
     navigator.clipboard
@@ -247,24 +248,50 @@ function DeviceRow({
           <span className="material-symbols-rounded text-lg" aria-hidden>
             visibility
           </span>
-          Reveal webhook URLs
+          Reveal connection details
         </Button>
       ) : (
-        <div className="flex flex-col gap-2 rounded-button bg-background-secondary p-3">
-          <p className="text-caption text-text-secondary">
-            Secret - anyone with these URLs can report this device's location. Set one automation per URL.
-          </p>
-          {(["arrive", "leave"] as const).map((event) => (
-            <div key={event} className="flex items-center gap-2">
-              <span className="w-12 shrink-0 text-caption text-text-secondary">{event === "arrive" ? "Arrive" : "Leave"}</span>
-              <Input readOnly value={webhookUrl(event)} className="h-10 flex-1 font-mono text-caption" aria-label={`${event} webhook URL for ${device.name}`} />
-              <Button variant="ghost" onClick={() => copy(webhookUrl(event), `${event} URL`)} aria-label={`Copy ${event} URL`}>
-                <span className="material-symbols-rounded text-lg" aria-hidden>
-                  content_copy
-                </span>
-              </Button>
-            </div>
-          ))}
+        <div className="flex flex-col gap-4 rounded-button bg-background-secondary p-3">
+          <div className="flex flex-col gap-2">
+            <p className="text-caption font-semibold text-text-primary">iOS Shortcuts / Android Tasker</p>
+            <p className="text-caption text-text-secondary">
+              Secret - anyone with these URLs can report this device's location. One "call a URL" automation per URL.
+            </p>
+            {(["arrive", "leave"] as const).map((event) => (
+              <div key={event} className="flex items-center gap-2">
+                <span className="w-12 shrink-0 text-caption text-text-secondary">{event === "arrive" ? "Arrive" : "Leave"}</span>
+                <Input readOnly value={webhookUrl(event)} className="h-10 flex-1 font-mono text-caption" aria-label={`${event} webhook URL for ${device.name}`} />
+                <Button variant="ghost" onClick={() => copy(webhookUrl(event), `${event} URL`)} aria-label={`Copy ${event} URL`}>
+                  <span className="material-symbols-rounded text-lg" aria-hidden>
+                    content_copy
+                  </span>
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-2 border-t border-border pt-3">
+            <p className="text-caption font-semibold text-text-primary">OwnTracks (Connection settings)</p>
+            <p className="text-caption text-text-secondary">
+              Mode: HTTP. Set a Region named "Home" in OwnTracks with "Share" on - see the module README for the full steps.
+            </p>
+            {[
+              { label: "Host", value: ownTracksHost },
+              { label: "Username", value: device.id },
+              { label: "Password", value: revealed ?? "" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex items-center gap-2">
+                <span className="w-20 shrink-0 text-caption text-text-secondary">{label}</span>
+                <Input readOnly value={value} className="h-10 flex-1 font-mono text-caption" aria-label={`OwnTracks ${label} for ${device.name}`} />
+                <Button variant="ghost" onClick={() => copy(value, `OwnTracks ${label}`)} aria-label={`Copy OwnTracks ${label}`}>
+                  <span className="material-symbols-rounded text-lg" aria-hidden>
+                    content_copy
+                  </span>
+                </Button>
+              </div>
+            ))}
+          </div>
+
           {copyMessage ? <p className="text-caption text-success">{copyMessage}</p> : null}
         </div>
       )}

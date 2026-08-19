@@ -1,9 +1,11 @@
-"""Every route below except `/webhook` is LAN-only, same trust model as
-the rest of AlexOS (see docs/MODULES.md and the repo-wide "no auth by
-design" note). `/webhook` is the one exception - it's meant to be
-called from outside the LAN, by the owner's own phone, so it's the only
-route in this whole codebase that requires a secret to call. See
-modules/presence/README.md for the full security model.
+"""Every route below except `/webhook` and `/owntracks` is LAN-only,
+same trust model as the rest of AlexOS (see docs/MODULES.md and the
+repo-wide "no auth by design" note). Those two are the exceptions -
+both are meant to be called from outside the LAN, by the owner's own
+phone (via iOS Shortcuts/Android Tasker, or the OwnTracks app
+respectively), so they're the only routes in this whole codebase that
+require a secret to call. See modules/presence/README.md for the full
+security model.
 
 Imports names explicitly out of every sibling file (`from .state import
 compute_status`, not `from . import state`) per docs/MODULES.md's
@@ -13,7 +15,8 @@ first hit building modules/control_center."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 
 from .config_store import unlock_ttl_minutes
@@ -32,15 +35,20 @@ from .state import (
     rename_device,
     set_pin,
     set_primary_device_id,
+    touch_device,
     unlock as unlock_session,
     verify_stored_pin,
 )
 
 router = APIRouter()
+_basic_auth = HTTPBasic(auto_error=False)
 
 _VALID_EVENTS = {"arrive", "leave"}
 _MIN_PIN_LENGTH = 4
 _MAX_PIN_LENGTH = 8
+# OwnTracks' own region-transition vocabulary ("enter"/"leave") mapped onto
+# ours ("arrive"/"leave") - see the /owntracks docstring below.
+_OWNTRACKS_TRANSITION_EVENTS = {"enter": "arrive", "leave": "leave"}
 
 
 def _client_identity(request: Request) -> str:
@@ -94,6 +102,63 @@ async def webhook(
     updated = await record_event(storage, device_id, event)
     await _publish_status(request)
     return {"ok": True, "deviceId": device_id, "event": updated["event"] if updated else event}
+
+
+@router.post("/owntracks")
+async def owntracks_webhook(
+    request: Request,
+    credentials: HTTPBasicCredentials | None = Depends(_basic_auth),
+) -> list:
+    """Alternate ingestion path for the OwnTracks app (Android, and iOS
+    on versions it still supports) in HTTP mode, for owners who'd rather
+    install a free, already-published app than build a device-side
+    automation by hand. Configure OwnTracks' Connection settings as:
+    Mode=HTTP, Host=this URL, Auth username=the device id, Auth
+    password=the device's token (both shown in Settings) - HTTP Basic
+    is what OwnTracks' own UI has fields for, unlike /webhook's query
+    string, which is what a Shortcuts/Tasker "call a URL" action wants
+    instead. Same fail-safe rules as /webhook: bad auth, unknown device
+    and a missing device all return the same 401.
+
+    Define exactly one Region in OwnTracks (any name, radius around
+    home) with "Share" enabled - AlexOS still does no geofence math of
+    its own, it only reacts to the `_type: "transition"` event OwnTracks
+    sends when it detects crossing that Region's boundary. Plain
+    `_type: "location"` beacons (which OwnTracks also sends on a timer)
+    only refresh "last seen", they never flip home/away by themselves.
+
+    Responds 200 with an empty JSON array on every accepted payload,
+    including ones this module doesn't act on (any `_type` other than
+    "transition"/"location") - that's OwnTracks' own HTTP API contract
+    (https://owntracks.org/booklet/tech/http/), and returning anything
+    else makes the app treat the publish as failed and retry it."""
+    identity = _client_identity(request)
+    if is_rate_limited(identity):
+        raise HTTPException(status_code=429, detail="Too many failed attempts. Try again later.")
+
+    storage = request.app.state.storage_manager
+    device_id = credentials.username if credentials else None
+    device = await get_device(storage, device_id) if device_id else None
+    if device is None or not credentials or not tokens_match(credentials.password, device["token"]):
+        record_failure(identity, device_id=device_id)
+        raise HTTPException(status_code=401, detail="Invalid device or token.", headers={"WWW-Authenticate": "Basic"})
+    reset_rate_limit(identity)
+
+    try:
+        body = await request.json()
+    except ValueError:
+        body = {}
+    message_type = body.get("_type") if isinstance(body, dict) else None
+
+    if message_type == "transition":
+        mapped_event = _OWNTRACKS_TRANSITION_EVENTS.get(body.get("event"))
+        if mapped_event is not None:
+            await record_event(storage, device_id, mapped_event)
+            await _publish_status(request)
+    elif message_type == "location":
+        await touch_device(storage, device_id)
+
+    return []
 
 
 # --- Status ------------------------------------------------------------------

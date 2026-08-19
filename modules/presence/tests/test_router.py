@@ -141,6 +141,106 @@ def test_webhook_rate_limits_repeated_bad_tokens() -> None:
     assert any(r.status_code == 429 for r in responses[10:])
 
 
+# --- OwnTracks (HTTP Basic auth, JSON body) ---------------------------------
+
+
+def test_owntracks_rejects_missing_auth() -> None:
+    client = _make_client()
+    _register_device(client)
+    response = client.post("/owntracks", json={"_type": "transition", "event": "enter"})
+    assert response.status_code == 401
+
+
+def test_owntracks_rejects_bad_password() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    response = client.post(
+        "/owntracks", json={"_type": "transition", "event": "enter"}, auth=(device["id"], "not-the-real-token")
+    )
+    assert response.status_code == 401
+
+
+def test_owntracks_rejects_unknown_username() -> None:
+    client = _make_client()
+    response = client.post("/owntracks", json={"_type": "transition", "event": "enter"}, auth=("ghost", "whatever"))
+    assert response.status_code == 401
+
+
+def test_owntracks_transition_enter_marks_the_device_as_arrived() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    response = client.post(
+        "/owntracks",
+        json={"_type": "transition", "event": "enter", "desc": "Home", "tid": "AB"},
+        auth=(device["id"], device["token"]),
+    )
+    assert response.status_code == 200
+    assert response.json() == []
+
+    status = client.get("/status").json()
+    updated = next(d for d in status["devices"] if d["id"] == device["id"])
+    assert updated["event"] == "arrive"
+    assert updated["lastSeen"] is not None
+
+
+def test_owntracks_transition_leave_marks_the_device_as_left() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    client.post(
+        "/owntracks", json={"_type": "transition", "event": "enter"}, auth=(device["id"], device["token"])
+    )
+    client.post(
+        "/owntracks", json={"_type": "transition", "event": "leave"}, auth=(device["id"], device["token"])
+    )
+
+    status = client.get("/status").json()
+    updated = next(d for d in status["devices"] if d["id"] == device["id"])
+    assert updated["event"] == "leave"
+
+
+def test_owntracks_plain_location_ping_updates_last_seen_but_not_event() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    client.post(
+        "/owntracks", json={"_type": "transition", "event": "enter"}, auth=(device["id"], device["token"])
+    )
+    response = client.post(
+        "/owntracks", json={"_type": "location", "lat": 40.0, "lon": -3.0}, auth=(device["id"], device["token"])
+    )
+    assert response.status_code == 200
+
+    status = client.get("/status").json()
+    updated = next(d for d in status["devices"] if d["id"] == device["id"])
+    assert updated["event"] == "arrive"  # unchanged by the location ping
+    assert updated["lastSeen"] is not None
+
+
+def test_owntracks_ignores_unrecognized_message_types_without_erroring() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    response = client.post("/owntracks", json={"_type": "waypoints"}, auth=(device["id"], device["token"]))
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_owntracks_tolerates_a_malformed_body() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    response = client.post(
+        "/owntracks", content=b"not json", headers={"Content-Type": "application/json"}, auth=(device["id"], device["token"])
+    )
+    assert response.status_code == 200
+
+
+def test_owntracks_and_webhook_share_the_same_rate_limiter() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    for _ in range(10):
+        client.post("/owntracks", json={"_type": "transition", "event": "enter"}, auth=(device["id"], "wrong"))
+    response = client.get(f"/webhook?device_id={device['id']}&event=arrive&token={device['token']}")
+    assert response.status_code == 429
+
+
 # --- Status ----------------------------------------------------------------
 
 

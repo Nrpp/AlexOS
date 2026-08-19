@@ -161,6 +161,27 @@ def test_record_event_for_unknown_device_returns_none() -> None:
     assert _run(scenario()) is None
 
 
+def test_touch_device_updates_last_seen_without_changing_event() -> None:
+    async def scenario():
+        storage = FakeStorageManager()
+        device = await state.create_device(storage, "Phone")
+        await state.record_event(storage, device["id"], "arrive")
+        return await state.touch_device(storage, device["id"])
+
+    updated = _run(scenario())
+    assert updated is not None
+    assert updated["event"] == "arrive"
+    assert updated["lastSeen"] is not None
+
+
+def test_touch_device_for_unknown_device_returns_none() -> None:
+    async def scenario():
+        storage = FakeStorageManager()
+        return await state.touch_device(storage, "does-not-exist")
+
+    assert _run(scenario()) is None
+
+
 # --- Primary device switching --------------------------------------------
 
 

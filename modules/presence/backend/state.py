@@ -102,6 +102,21 @@ async def record_event(storage: StorageManager, device_id: str, event: str) -> d
     return None
 
 
+async def touch_device(storage: StorageManager, device_id: str) -> dict[str, Any] | None:
+    """Updates lastSeen only, leaving `event` (home/away) untouched. Used
+    for OwnTracks' plain `_type: "location"` beacons, which fire on a
+    timer regardless of whether the phone crossed a Region - we still
+    don't do geofence math ourselves, so a location ping alone must
+    never flip home/away, only prove the device is still reporting."""
+    devices = await list_devices(storage)
+    for device in devices:
+        if device["id"] == device_id:
+            device["lastSeen"] = _iso(_now())
+            await _save_devices(storage, devices)
+            return device
+    return None
+
+
 # --- Primary device ------------------------------------------------------
 
 
