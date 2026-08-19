@@ -13,5 +13,6 @@
       "description": "Current conditions, temperature, and today's high/low."
     }
   ],
-  "icon": "partly_cloudy_day"
+  "icon": "partly_cloudy_day",
+  "personal": false
 }

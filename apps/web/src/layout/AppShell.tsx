@@ -6,6 +6,7 @@ import { StatusBar } from "./StatusBar/StatusBar";
 import { Dock } from "./Dock/Dock";
 import { NotificationsLayer } from "./NotificationsLayer";
 import { DialogsLayer } from "./DialogsLayer";
+import { PresenceGate } from "./PresenceGate";
 import { useAutoTheme } from "../core/useAutoTheme";
 
 /**
@@ -36,7 +37,7 @@ export function AppShell() {
               transition={{ duration: motionTokens.durationBase / 1000, ease: "easeOut" }}
             >
               <Suspense fallback={<div className="h-32 animate-pulse rounded-card bg-surface" />}>
-                {element}
+                <PresenceGate>{element}</PresenceGate>
               </Suspense>
             </motion.div>
           </AnimatePresence>

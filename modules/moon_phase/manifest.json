@@ -13,5 +13,6 @@
       "description": "Today's moon phase and illumination."
     }
   ],
-  "icon": "bedtime"
+  "icon": "bedtime",
+  "personal": false
 }

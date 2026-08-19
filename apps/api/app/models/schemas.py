@@ -58,6 +58,14 @@ class ModuleManifest(CamelModel):
     routes: list[str] = []
     widgets: list[ModuleWidgetDeclaration] = []
     icon: str | None = None
+    # Ambient-safe: whether this module's widget is OK to show on the
+    # always-on display while modules/presence's away-mode is locked.
+    # Defaults to True (personal/sensitive) so every existing module -
+    # and any new one that never thinks about this - stays hidden while
+    # away without needing to touch its manifest. Only modules/clock,
+    # modules/world_clock, modules/moon_phase, and modules/weather set
+    # this to False. See modules/presence/README.md.
+    personal: bool = True
 
 
 class RegisteredModule(CamelModel):

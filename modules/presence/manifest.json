@@ -1,0 +1,32 @@
+{
+  "name": "presence",
+  "version": "0.1.0",
+  "author": "AlexOS",
+  "description": "Phone-reported arrive/leave events (iOS Shortcuts / Android Tasker) drive an away-mode PIN lock, so only non-personal widgets show on the always-on display when nobody's home.",
+  "permissions": [],
+  "dependencies": [],
+  "routes": [
+    "/webhook",
+    "/status",
+    "/devices",
+    "/devices/{deviceId}",
+    "/devices/{deviceId}/token",
+    "/devices/{deviceId}/primary",
+    "/pin",
+    "/unlock",
+    "/lock"
+  ],
+  "widgets": [
+    {
+      "id": "presence-status",
+      "name": "Presence",
+      "description": "Home or away, and which devices are known."
+    },
+    {
+      "id": "presence-settings",
+      "name": "Presence settings",
+      "description": "Manage devices, the primary device, and the away-mode PIN."
+    }
+  ],
+  "icon": "location_on"
+}
