@@ -277,21 +277,39 @@ def test_lock_clears_an_active_unlock_session() -> None:
 # --- compute_status: fail-safe defaults and staleness ---------------------
 
 
-def test_status_defaults_to_locked_and_not_home_with_no_devices() -> None:
+def test_status_defaults_to_not_home_and_unlocked_with_no_devices_and_no_pin() -> None:
+    """Not locked with no PIN yet, even though not home - locking with no
+    PIN configured would seal off Settings (the only place a PIN can be
+    set) with no way back in. See test_locked_requires_a_pin_to_engage
+    below for the dedicated regression test."""
+
     async def scenario():
         storage = FakeStorageManager()
         return await state.compute_status(storage)
 
     status = _run(scenario())
     assert status["home"] is False
-    assert status["locked"] is True
+    assert status["locked"] is False
+    assert status["pinConfigured"] is False
     assert status["primaryDeviceId"] is None
     assert status["devices"] == []
+
+
+def test_status_locked_once_a_pin_exists_and_still_no_device_has_reported() -> None:
+    async def scenario():
+        storage = FakeStorageManager()
+        await state.set_pin(storage, "1234")
+        return await state.compute_status(storage)
+
+    status = _run(scenario())
+    assert status["home"] is False
+    assert status["locked"] is True
 
 
 def test_status_not_home_when_primary_never_reported() -> None:
     async def scenario():
         storage = FakeStorageManager()
+        await state.set_pin(storage, "1234")
         device = await state.create_device(storage, "Phone")
         await state.set_primary_device_id(storage, device["id"])
         return await state.compute_status(storage)
@@ -317,6 +335,7 @@ def test_status_home_when_primary_last_event_is_arrive() -> None:
 def test_status_away_when_primary_last_event_is_leave() -> None:
     async def scenario():
         storage = FakeStorageManager()
+        await state.set_pin(storage, "1234")
         device = await state.create_device(storage, "Phone")
         await state.set_primary_device_id(storage, device["id"])
         await state.record_event(storage, device["id"], "arrive")
@@ -328,9 +347,29 @@ def test_status_away_when_primary_last_event_is_leave() -> None:
     assert status["locked"] is True
 
 
+def test_locked_requires_a_pin_to_engage() -> None:
+    """Regression test for the first-run lockout: with no PIN ever set,
+    `locked` must stay False no matter how "away" the primary device
+    reports - otherwise the owner is sealed out of Settings (the only
+    place a PIN can be set) with no way back in short of a raw API call."""
+
+    async def scenario():
+        storage = FakeStorageManager()
+        device = await state.create_device(storage, "Phone")
+        await state.set_primary_device_id(storage, device["id"])
+        await state.record_event(storage, device["id"], "leave")
+        return await state.compute_status(storage)
+
+    status = _run(scenario())
+    assert status["home"] is False
+    assert status["pinConfigured"] is False
+    assert status["locked"] is False
+
+
 def test_locked_is_false_while_an_unlock_session_is_active_and_away() -> None:
     async def scenario():
         storage = FakeStorageManager()
+        await state.set_pin(storage, "1234")
         await state.unlock(storage, ttl_minutes=15)
         return await state.compute_status(storage)
 
@@ -346,6 +385,7 @@ def test_stale_primary_signal_is_treated_as_not_home() -> None:
 
     async def scenario():
         storage = FakeStorageManager()
+        await state.set_pin(storage, "1234")
         config_store.configure({"staleAfterHours": 1})
         device = await state.create_device(storage, "Phone")
         await state.set_primary_device_id(storage, device["id"])

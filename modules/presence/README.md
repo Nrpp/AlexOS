@@ -45,12 +45,22 @@ device. Both routes share the same per-IP rate limiter
 (`backend/rate_limit.py`), since it's keyed by source address, not by
 which endpoint was hit.
 
-**Fails toward privacy, not toward convenience.** With no device ever
-having reported in, or with the primary device's last signal older
-than `config.json`'s `staleAfterHours` (phone died, automation got
-disabled, lost signal for a long trip, ...), the dashboard is treated
-as **away and locked** - never the reverse. A bug or a dead phone
-battery should never accidentally leave the real dashboard exposed.
+**Fails toward privacy, not toward convenience - but never toward a
+permanent lockout.** With no device ever having reported in, or with
+the primary device's last signal older than `config.json`'s
+`staleAfterHours` (phone died, automation got disabled, lost signal
+for a long trip, ...), `home` is `false` - never the reverse. A bug or
+a dead phone battery should never accidentally leave the real
+dashboard exposed. **But `locked` additionally requires a PIN to
+already be configured** (`compute_status` in `backend/state.py`):
+without that, `home = false` alone would seal the owner out of
+Settings - the *only* place a PIN can be set - with no way back in
+short of a raw API call to the LAN-only `/pin`/`/unlock` routes. So on
+first install, before any device has reported and before a PIN
+exists, the dashboard stays fully visible (not locked) precisely so
+the owner can reach Settings and register a device / set a PIN. Once
+a PIN exists, the normal fail-safe-toward-privacy behavior described
+above takes over immediately.
 
 **PIN hashed, never stored or logged in the clear.** PBKDF2-HMAC-SHA256
 with a random per-PIN salt (stdlib `hashlib`/`secrets`, no new

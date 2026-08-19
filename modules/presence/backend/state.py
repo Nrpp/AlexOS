@@ -203,13 +203,20 @@ async def compute_status(storage: StorageManager) -> dict[str, Any]:
         and primary.get("event") == "arrive"
         and not _is_stale(primary.get("lastSeen"), stale_after_hours())
     )
-    locked = (not home) and not await is_unlocked(storage)
+    # Locking is meaningless (and dangerous) before a PIN exists to unlock
+    # with: on first install, nobody has reported "home" yet AND no PIN is
+    # set, so a naive `(not home)` here would lock the dashboard - Settings
+    # included - with no way back in short of a raw API call. A PIN can
+    # only be set from Settings, so away-mode must stay off (unlocked)
+    # until that PIN actually exists.
+    pin_configured = await is_pin_configured(storage)
+    locked = (not home) and pin_configured and not await is_unlocked(storage)
 
     return {
         "locked": locked,
         "home": home,
         "primaryDeviceId": primary_id,
-        "pinConfigured": await is_pin_configured(storage),
+        "pinConfigured": pin_configured,
         "devices": [
             {
                 "id": device["id"],
