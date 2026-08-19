@@ -244,16 +244,27 @@ def test_owntracks_and_webhook_share_the_same_rate_limiter() -> None:
 # --- Status ----------------------------------------------------------------
 
 
-def test_status_defaults_to_locked_and_not_home() -> None:
+def test_status_defaults_to_not_home_but_not_locked_with_no_pin_set() -> None:
+    """Regression test: locking with no PIN configured yet would seal the
+    owner out of Settings (the only place a PIN can be set), permanently -
+    see modules/presence/backend/state.py's compute_status."""
     client = _make_client()
     status = client.get("/status").json()
     assert status == {
-        "locked": True,
+        "locked": False,
         "home": False,
         "primaryDeviceId": None,
         "pinConfigured": False,
         "devices": [],
     }
+
+
+def test_status_locked_once_a_pin_is_set_and_still_not_home() -> None:
+    client = _make_client()
+    client.post("/pin", json={"newPin": "1234"})
+    status = client.get("/status").json()
+    assert status["locked"] is True
+    assert status["home"] is False
 
 
 def test_status_reflects_arrive_then_leave_for_the_primary_device() -> None:
