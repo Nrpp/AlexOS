@@ -204,6 +204,35 @@ function ControlCenterSection() {
   );
 }
 
+/** modules/presence's named `PresenceSettings` export (not its default
+ * status-card widget, already selectable on Home like any other module)
+ * - the device/primary/PIN manager for away mode. See
+ * modules/presence/README.md for the full setup. */
+function PresenceSection() {
+  const { apiClient } = useCore();
+  const PresenceSettingsWidget = widgetRegistry.presence?.widgets.find(
+    (Widget) => Widget !== widgetRegistry.presence?.Component,
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <h2 className="text-title font-semibold text-text-primary">Presence &amp; away mode</h2>
+        <p className="text-caption text-text-secondary">
+          Devices, the primary device, and the PIN that guards the dashboard while nobody's home.
+        </p>
+      </div>
+      {PresenceSettingsWidget ? (
+        <PresenceSettingsWidget apiBaseUrl={apiClient.baseUrl} />
+      ) : (
+        <Card>
+          <CardEmpty icon="location_on" message="Presence module isn't installed." />
+        </Card>
+      )}
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-6 py-6">
@@ -217,6 +246,7 @@ export default function SettingsPage() {
         <HomeWidgetsCard />
       </div>
       <ControlCenterSection />
+      <PresenceSection />
       <PagePlaceholder icon="build" comingSoon="Plugins, accounts, updates, and backups are on the roadmap." />
     </div>
   );

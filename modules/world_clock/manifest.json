@@ -13,5 +13,6 @@
       "description": "Live time across configured timezones."
     }
   ],
-  "icon": "public"
+  "icon": "public",
+  "personal": false
 }

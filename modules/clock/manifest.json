@@ -13,5 +13,6 @@
       "description": "Live time and date, pushed by the backend every second."
     }
   ],
-  "icon": "schedule"
+  "icon": "schedule",
+  "personal": false
 }

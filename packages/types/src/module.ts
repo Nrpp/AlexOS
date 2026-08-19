@@ -19,6 +19,16 @@ export interface ModuleManifest {
   routes: string[];
   widgets: ModuleWidgetDeclaration[];
   icon?: string;
+  /**
+   * Ambient-safe: whether this module's widget is OK to show on the
+   * always-on display while modules/presence's away-mode is locked.
+   * Absent on most manifest.json files on disk (defaults to `true` -
+   * personal/sensitive - on the backend, see `ModuleManifest` in
+   * apps/api/app/models/schemas.py) but always present as an explicit
+   * boolean on API responses, since Pydantic fills the default in
+   * before serializing. Treat `undefined` the same as `true`.
+   */
+  personal?: boolean;
 }
 
 export interface RegisteredModule {
