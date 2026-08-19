@@ -131,7 +131,11 @@ logged and never returned in bulk - only via the explicit `GET
     after `config.json`'s `unlockTtlMinutes` (15 by default).
   - `POST /lock` - immediately re-locks (e.g. the owner is stepping
     out and wants the screen private right away, without waiting for
-    their phone to report "left").
+    their phone to report "left"). Only has any visible effect while
+    `home` is `false` - `locked` requires `!home` regardless of the
+    unlock session state (see `compute_status`), so calling this while
+    home is a deliberate no-op; both frontend "Lock" buttons (below)
+    are hidden in that case rather than shown as dead controls.
   - Publishes `presence.updated` (retained) on every state change, so
     the frontend reacts close to live - see `apps/api/app/core/event_bus.py`
     and how `apps/web` subscribes.
@@ -145,7 +149,9 @@ logged and never returned in bulk - only via the explicit `GET
     widgets" like any other module widget.
   - Named export `PresenceSettings` - the device/primary/PIN manager,
     wired into the Settings page (see
-    `apps/web/src/pages/Settings/index.tsx`'s `PresenceSection`).
+    `apps/web/src/pages/Settings/index.tsx`'s `PresenceSection`). Its
+    "Lock now" button only renders while `!home` (see the `/lock` note
+    above).
   - The actual away-mode gate lives one level up, at the app shell:
     `apps/web/src/layout/PresenceGate.tsx`, wrapped around the routed
     page in `apps/web/src/layout/AppShell.tsx`. It polls `GET /status`
@@ -155,7 +161,14 @@ logged and never returned in bulk - only via the explicit `GET
     locked, it renders an ambient view - the Clock widget (reused
     as-is, not re-implemented) plus every other module whose
     `manifest.json` sets `"personal": false` - and a tap anywhere
-    opens a PIN pad.
+    opens a PIN pad. Arriving home (the primary device reports
+    `arrive`) clears the lock automatically, no PIN needed - `locked`
+    is `false` whenever `home` is `true`, unconditionally. While away
+    but manually unlocked (a PIN was entered, or an unlock session is
+    still within its TTL), `PresenceGate` also floats a small "Lock"
+    button (top-right, `aria-label="Lock the dashboard now"`) over the
+    normal dashboard, so re-locking on the way out doesn't require a
+    trip through Settings.
 
 ## The `"personal"` manifest field
 

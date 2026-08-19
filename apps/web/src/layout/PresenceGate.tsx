@@ -264,12 +264,43 @@ export function PresenceGate({ children }: { children: ReactNode }) {
     void refetch();
   }, [refetch]);
 
+  const handleLockNow = useCallback(async () => {
+    await fetch(`${apiClient.baseUrl}/api/v1/modules/presence/lock`, { method: "POST" });
+    void refetch();
+  }, [apiClient, refetch]);
+
   // status === null only before the very first fetch resolves - render
   // the dashboard as-is rather than flashing the ambient view on every
   // navigation while a fresh poll is in flight.
   const locked = status?.locked ?? false;
 
-  if (!locked) return <>{children}</>;
+  // Away but currently unlocked (a PIN was entered from the ambient view,
+  // or an unlock session is still within its TTL) - re-entering home
+  // clears this automatically (see compute_status), so this floating
+  // control only ever needs to cover the "still away, want it private
+  // again right now" case, not the normal "walked back in" case.
+  const awayButUnlocked = status !== null && !status.home && !locked;
+
+  if (!locked) {
+    return (
+      <>
+        {children}
+        {awayButUnlocked ? (
+          <Button
+            variant="secondary"
+            onClick={() => void handleLockNow()}
+            className="fixed right-4 top-4 z-40"
+            aria-label="Lock the dashboard now"
+          >
+            <span className="material-symbols-rounded text-lg" aria-hidden>
+              lock
+            </span>
+            Lock
+          </Button>
+        ) : null}
+      </>
+    );
+  }
 
   return (
     <>
