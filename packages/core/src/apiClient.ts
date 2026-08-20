@@ -23,6 +23,13 @@ export class ApiClient {
     return this.request<AppConfig>("/api/v1/config");
   }
 
+  async updateConfig(config: AppConfig): Promise<AppConfig> {
+    return this.request<AppConfig>("/api/v1/config", {
+      method: "PUT",
+      body: JSON.stringify(config),
+    });
+  }
+
   async getNotifications(): Promise<Notification[]> {
     return this.request<Notification[]>("/api/v1/notifications");
   }

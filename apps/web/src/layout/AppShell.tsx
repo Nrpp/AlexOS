@@ -8,6 +8,7 @@ import { NotificationsLayer } from "./NotificationsLayer";
 import { DialogsLayer } from "./DialogsLayer";
 import { PresenceGate } from "./PresenceGate";
 import { useAutoTheme } from "../core/useAutoTheme";
+import { useIdleRedirect } from "../core/useIdleRedirect";
 
 /**
  * The fixed structure every AlexOS screen follows: Status Bar, Main
@@ -20,6 +21,9 @@ export function AppShell() {
   // switching keeps running no matter which page is showing - see
   // useAutoTheme.ts. Settings' toggle controls the same shared flag.
   useAutoTheme();
+  // Same reasoning: mounted once so the idle timer survives navigation
+  // instead of resetting on every page change - see useIdleRedirect.ts.
+  useIdleRedirect();
 
   return (
     <DialogsLayer>

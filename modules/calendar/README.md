@@ -1,7 +1,7 @@
 # Calendar
 
-Powers the Home page's "Today's calendar" card. **Real data** via
-Google Calendar.
+Powers the Home page's "Today's calendar" card, and a full month-view
+widget on the Communication page. **Real data** via Google Calendar.
 
 ## Setup
 
@@ -29,17 +29,35 @@ trusting the container's system clock.
 
 ## What it does
 
-- **Backend** (`backend/`): `GET /api/v1/modules/calendar/events/today`
-  - real events from Google Calendar for the configured calendar and
-  timezone, in order. `on_load` also polls every `config.json`'s
-  `tickIntervalSeconds` (120s default) and publishes `calendar.updated`
-  (retained) - so an event added on your phone in Google Calendar's own
-  app shows up here without a manual browser reload.
-- **Frontend** (`frontend/index.tsx`): a `CalendarWidget` that fetches
-  on mount and refreshes on `calendar.updated`. Shows "Google Calendar
-  isn't connected" only when there's genuinely no OAuth token yet - a
-  real failure (bad timezone, Google API error) shows the actual error
-  message instead, with a retry button.
+- **Backend** (`backend/`):
+  - `GET /api/v1/modules/calendar/events/today` - real events from
+    Google Calendar for the configured calendar and timezone, in
+    order. `on_load` also polls every `config.json`'s
+    `tickIntervalSeconds` (120s default) and publishes
+    `calendar.updated` (retained) - so an event added on your phone in
+    Google Calendar's own app shows up here without a manual browser
+    reload.
+  - `GET /api/v1/modules/calendar/events/month?year=&month=` - every
+    event in the given month, each with a `date` (the event's day in
+    the configured timezone, not just its time) for the frontend to
+    group into a day grid. Not polled/pushed like `/events/today` - the
+    month widget fetches on demand (mount + navigation) since browsing
+    a specific month isn't something that needs to feel "live" the way
+    today's list does.
+- **Frontend** (`frontend/index.tsx`):
+  - Default export `CalendarWidget` - today's events, fetches on mount
+    and refreshes on `calendar.updated`.
+  - Named export `CalendarMonthWidget` - a full month grid (Monday-
+    first) with prev/next navigation and a "Today" jump-back, showing
+    up to 2 events per day inline ("+N more" beyond that). Wired onto
+    the Communication page (`apps/web/src/pages/Communication/index.tsx`)
+    alongside `modules/communication`'s inbox widget - see
+    `docs/MODULES.md`'s note on `ModuleWidgetPage`'s `moduleName`
+    accepting several modules at once.
+  - Both show "Google Calendar isn't connected" only when there's
+    genuinely no OAuth token yet - a real failure (bad timezone, Google
+    API error) shows the actual error message instead, with a retry
+    button.
 
 ## Fixed bug: `ZoneInfoNotFoundError` crashing every request
 

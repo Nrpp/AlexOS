@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardSubtitle, CardContent, CardEmpty, CardLoading, Toggle } from "@alexos/ui";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardSubtitle,
+  CardContent,
+  CardEmpty,
+  CardLoading,
+  Toggle,
+  Input,
+  Button,
+} from "@alexos/ui";
 import { useTheme } from "@alexos/hooks";
-import type { RegisteredModule, SystemHealth } from "@alexos/types";
+import type { AppConfig, RegisteredModule, SystemHealth } from "@alexos/types";
 import { useCore } from "../../core/useCore";
 import { PagePlaceholder } from "../../components/PagePlaceholder";
 import { widgetRegistry } from "../../modules/registry";
@@ -88,6 +99,96 @@ function ModulesCard() {
       <CardContent>
         {health ? `${health.modulesLoaded} module${health.modulesLoaded === 1 ? "" : "s"} loaded` : "Checking..."}
       </CardContent>
+    </Card>
+  );
+}
+
+/** Backed by GET/PUT /api/v1/config's idleTimeoutMinutes - reads and
+ * writes the whole AppConfig object (theme/userName included) so
+ * saving this field never clobbers the other two, even though this
+ * page doesn't otherwise touch that endpoint (theme is client-only,
+ * via useTheme/localStorage). Takes effect after the page is next
+ * reloaded - see useIdleRedirect.ts, which reads this once per app
+ * session rather than polling. */
+function IdleTimeoutCard() {
+  const { apiClient } = useCore();
+  const [config, setConfig] = useState<AppConfig | null>(null);
+  const [minutesInput, setMinutesInput] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiClient
+      .getConfig()
+      .then((result) => {
+        if (cancelled) return;
+        setConfig(result);
+        setMinutesInput(String(result.idleTimeoutMinutes));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [apiClient]);
+
+  const save = async () => {
+    if (!config) return;
+    const parsed = Math.max(0, Math.trunc(Number(minutesInput) || 0));
+    setBusy(true);
+    setSaved(false);
+    try {
+      const updated = await apiClient.updateConfig({ ...config, idleTimeoutMinutes: parsed });
+      setConfig(updated);
+      setMinutesInput(String(updated.idleTimeoutMinutes));
+      setSaved(true);
+    } catch {
+      // Best-effort, same as the other Settings cards - the input just
+      // keeps whatever the owner typed so they can retry Save.
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader
+        icon={
+          <span className="material-symbols-rounded" aria-hidden>
+            timer
+          </span>
+        }
+      >
+        <CardTitle>Idle timeout</CardTitle>
+        <CardSubtitle>Return to Home after this many minutes of no touch/click/key activity.</CardSubtitle>
+      </CardHeader>
+      {config === null ? (
+        <CardLoading />
+      ) : (
+        <CardContent className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={minutesInput}
+              onChange={(event) => {
+                setMinutesInput(event.target.value);
+                setSaved(false);
+              }}
+              aria-label="Idle timeout in minutes"
+              className="w-24"
+            />
+            <span className="text-caption text-text-secondary">minutes (0 = never)</span>
+            <Button variant="secondary" disabled={busy} onClick={() => void save()} className="ml-auto">
+              Save
+            </Button>
+          </div>
+          {saved ? (
+            <p className="text-caption text-success">Saved - takes effect next time this page loads.</p>
+          ) : null}
+        </CardContent>
+      )}
     </Card>
   );
 }
@@ -243,6 +344,7 @@ export default function SettingsPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         <AppearanceCard />
         <ModulesCard />
+        <IdleTimeoutCard />
         <HomeWidgetsCard />
       </div>
       <ControlCenterSection />

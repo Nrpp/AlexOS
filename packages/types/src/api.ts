@@ -10,6 +10,9 @@ export interface SystemHealth {
 export interface AppConfig {
   theme: "dark" | "light";
   userName: string;
+  /** Minutes of no touch/click/key/scroll activity before the kiosk
+   * navigates back to Home on its own. 0 disables it. */
+  idleTimeoutMinutes: number;
 }
 
 /** Response shape for GET/PUT /api/v1/config/home-widgets. `moduleNames:

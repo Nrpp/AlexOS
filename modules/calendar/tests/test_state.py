@@ -43,3 +43,41 @@ def test_valid_timezone_resolves_without_error() -> None:
     from zoneinfo import ZoneInfo
 
     assert state._resolve_timezone("Europe/Madrid") == ZoneInfo("Europe/Madrid")
+
+
+# --- Month view: bounds and date formatting --------------------------------
+
+
+def test_month_bounds_spans_the_whole_month() -> None:
+    from zoneinfo import ZoneInfo
+
+    tz = ZoneInfo("UTC")
+    start, end = state._month_bounds(2026, 2, tz)
+    assert start == "2026-02-01T00:00:00+00:00"
+    assert end == "2026-03-01T00:00:00+00:00"  # first of the *next* month, exclusive upper bound
+
+
+def test_month_bounds_handles_december_rolling_into_next_year() -> None:
+    from zoneinfo import ZoneInfo
+
+    tz = ZoneInfo("UTC")
+    start, end = state._month_bounds(2026, 12, tz)
+    assert start == "2026-12-01T00:00:00+00:00"
+    assert end == "2027-01-01T00:00:00+00:00"
+
+
+def test_format_event_date_for_a_timed_event_uses_the_configured_timezone() -> None:
+    from zoneinfo import ZoneInfo
+
+    tz = ZoneInfo("America/New_York")
+    # 2026-01-15T02:30:00Z is still 2026-01-14 evening in New York - the
+    # whole reason this converts rather than just slicing the UTC string.
+    start = {"dateTime": "2026-01-15T02:30:00+00:00"}
+    assert state._format_event_date(start, tz) == "2026-01-14"
+
+
+def test_format_event_date_for_an_all_day_event_uses_the_date_field_as_is() -> None:
+    from zoneinfo import ZoneInfo
+
+    start = {"date": "2026-03-10"}
+    assert state._format_event_date(start, ZoneInfo("UTC")) == "2026-03-10"
