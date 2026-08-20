@@ -212,6 +212,8 @@ def test_owntracks_plain_location_ping_updates_last_seen_but_not_event() -> None
     status = client.get("/status").json()
     updated = next(d for d in status["devices"] if d["id"] == device["id"])
     assert updated["event"] == "arrive"  # unchanged by the location ping
+    assert updated["lastEventAt"] is not None
+    assert updated["lastSeen"] > updated["lastEventAt"]  # the ping moved lastSeen, not lastEventAt
     assert updated["lastSeen"] is not None
 
 

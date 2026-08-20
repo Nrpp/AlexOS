@@ -22,7 +22,10 @@ interface PresenceDevice {
   id: string;
   name: string;
   event: "arrive" | "leave" | null;
+  /** Any ping at all - a transition or a plain location beacon. */
   lastSeen: string | null;
+  /** Only a transition (arrive/leave) - when `event` itself last changed. */
+  lastEventAt: string | null;
   createdAt?: string;
 }
 
@@ -164,6 +167,15 @@ function DeviceRow({
   const [nameDraft, setNameDraft] = useState(device.name);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
+  // Pings are arriving (lastSeen is moving) but no transition has fired
+  // since - almost always a Region that's missing, has "Share" off, or
+  // hasn't been crossed yet since it was added. Distinct from "never
+  // reported at all" (device.lastSeen === null), which is a connectivity
+  // problem instead - see the README's troubleshooting section.
+  const stuckOnStaleTransition = Boolean(
+    device.lastSeen && (!device.event || (device.lastEventAt && device.lastSeen > device.lastEventAt)),
+  );
+
   const webhookUrl = (event: "arrive" | "leave") =>
     `${apiBaseUrl}/api/v1/modules/presence/webhook?device_id=${encodeURIComponent(device.id)}&event=${event}&token=${revealed ?? ""}`;
   const ownTracksHost = `${apiBaseUrl}/api/v1/modules/presence/owntracks`;
@@ -240,8 +252,19 @@ function DeviceRow({
       </div>
 
       <p className="text-caption text-text-secondary">
-        {device.event ? `Last ${device.event} ${formatRelativeTime(device.lastSeen)}` : "Never reported yet"}
+        Last contact: {device.lastSeen ? formatRelativeTime(device.lastSeen) : "never"}
       </p>
+      <p className="text-caption text-text-secondary">
+        {device.event
+          ? `Last status change: ${device.event} ${formatRelativeTime(device.lastEventAt)}`
+          : "No arrive/leave reported yet"}
+      </p>
+      {stuckOnStaleTransition ? (
+        <p className="text-caption text-warning">
+          Receiving pings but no arrive/leave change - check that a Region is set up in the tracking app with
+          "Share" enabled, and that you've crossed its boundary at least once since adding it.
+        </p>
+      ) : null}
 
       {revealed === null ? (
         <Button variant="secondary" disabled={busy} onClick={onReveal} className="self-start">

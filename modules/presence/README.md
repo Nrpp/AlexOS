@@ -335,6 +335,50 @@ this repo's Docker setup. The phone (whichever app it's running) needs
 the Tailscale app installed and connected too if you go the Funnel/
 Tailscale-only route, since the URL is only reachable on the tailnet.
 
+## Troubleshooting: "I'm home but it says I'm away"
+
+Each device tracks two separate timestamps, both visible in Settings ->
+**Presence & away mode** under that device:
+
+- **Last contact** (`lastSeen`) - the last time *anything* arrived from
+  that device, a transition or a plain location beacon.
+- **Last status change** (`lastEventAt`) - the last time an actual
+  arrive/leave *transition* was received. This is what `home` is based
+  on.
+
+If **Last contact** is recent but **Last status change** is stale (or
+says "No arrive/leave reported yet"), the device *is* reaching AlexOS
+fine - the app just hasn't sent a transition. Settings shows a warning
+for exactly this case. Almost always one of:
+
+1. **No Region defined**, or **"Share" is off for it**, in the tracking
+   app (OwnTracks' Settings -> Regions, or the equivalent "Arrive/Leave"
+   automation setup for Shortcuts/Tasker). A transition can only fire
+   for a Region the app is actually watching *and* configured to
+   publish.
+2. **The phone was already inside the Region when it was created.**
+   Region monitoring (on both iOS and Android) only fires on a
+   *crossing* - entering after being outside, or leaving after being
+   inside. Defining "Home" while already standing in it produces no
+   event until you actually walk out and back in once. This is the
+   single most common cause of "I'm home but it says away" right after
+   initial setup - the fix is a one-time walk outside the radius and
+   back.
+3. **The radius is too tight for GPS accuracy indoors.** 100-150m is a
+   safe default; a very small radius (e.g. 20-30m) can miss the
+   crossing entirely on a phone with poor indoor GPS.
+4. **Background location isn't actually granted "Always"** (Android) or
+   the automation still needs "while using" confirmed once (iOS) - the
+   OS silently stops delivering region updates in the background
+   otherwise, and beacons alone won't fix it since `_type: "location"`
+   never touches `event` by design (see `touch_device` in
+   `backend/state.py`).
+
+If **Last contact** itself is stale (or "never"), nothing is reaching
+AlexOS at all - that's a connectivity problem (wrong Host/URL, wrong
+token, the app not actually running in the background, port/Tailscale
+reachability), not a Region/transition one - check step 6 above first.
+
 ## Testing note
 
 `modules/presence/tests/` covers `security.py` and `state.py` directly

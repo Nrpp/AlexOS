@@ -63,6 +63,7 @@ async def create_device(storage: StorageManager, name: str) -> dict[str, Any]:
         "token": generate_device_token(),
         "event": None,
         "lastSeen": None,
+        "lastEventAt": None,
         "createdAt": _iso(_now()),
     }
     devices.append(device)
@@ -95,19 +96,32 @@ async def record_event(storage: StorageManager, device_id: str, event: str) -> d
     devices = await list_devices(storage)
     for device in devices:
         if device["id"] == device_id:
+            now = _iso(_now())
             device["event"] = event
-            device["lastSeen"] = _iso(_now())
+            device["lastSeen"] = now
+            device["lastEventAt"] = now
             await _save_devices(storage, devices)
             return device
     return None
 
 
 async def touch_device(storage: StorageManager, device_id: str) -> dict[str, Any] | None:
-    """Updates lastSeen only, leaving `event` (home/away) untouched. Used
-    for OwnTracks' plain `_type: "location"` beacons, which fire on a
-    timer regardless of whether the phone crossed a Region - we still
-    don't do geofence math ourselves, so a location ping alone must
-    never flip home/away, only prove the device is still reporting."""
+    """Updates lastSeen only, leaving `event`/`lastEventAt` (home/away and
+    when it last changed) untouched. Used for OwnTracks' plain
+    `_type: "location"` beacons, which fire on a timer regardless of
+    whether the phone crossed a Region - we still don't do geofence math
+    ourselves, so a location ping alone must never flip home/away, only
+    prove the device is still reporting.
+
+    Keeping lastSeen (any ping) separate from lastEventAt (last arrive/
+    leave) matters for diagnosing exactly the failure mode this was
+    added for: a device that's reporting fine (lastSeen recent) but
+    whose Region/"Share" isn't actually configured in OwnTracks, so no
+    transition ever fires and `event` stays stuck on a stale value -
+    without the split, a recent `lastSeen` on a stale "leave" device
+    looks identical to a working one, and there's no way to tell "not
+    receiving anything" apart from "receiving beacons but never a
+    transition" from the outside."""
     devices = await list_devices(storage)
     for device in devices:
         if device["id"] == device_id:
@@ -223,6 +237,7 @@ async def compute_status(storage: StorageManager) -> dict[str, Any]:
                 "name": device["name"],
                 "event": device.get("event"),
                 "lastSeen": device.get("lastSeen"),
+                "lastEventAt": device.get("lastEventAt"),
             }
             for device in devices
         ],
