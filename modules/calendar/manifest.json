@@ -2,15 +2,20 @@
   "name": "calendar",
   "version": "0.1.0",
   "author": "AlexOS",
-  "description": "Today's events via Google Calendar - see README for setup (shares AlexOS's Google OAuth client).",
+  "description": "Today's events and a full month view via Google Calendar - see README for setup (shares AlexOS's Google OAuth client).",
   "permissions": [],
   "dependencies": [],
-  "routes": ["/events/today"],
+  "routes": ["/events/today", "/events/month"],
   "widgets": [
     {
       "id": "calendar",
       "name": "Calendar",
       "description": "Today's events, in order."
+    },
+    {
+      "id": "calendar-month",
+      "name": "Month view",
+      "description": "Full month grid with every event, and previous/next navigation."
     }
   ],
   "icon": "calendar_today"

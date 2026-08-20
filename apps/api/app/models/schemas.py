@@ -27,6 +27,10 @@ class SystemHealth(CamelModel):
 class AppConfig(CamelModel):
     theme: Literal["dark", "light"] = "dark"
     user_name: str = "there"
+    # Minutes of no touch/click/key/scroll activity before the kiosk
+    # navigates back to Home on its own. 0 disables it - same "0 means
+    # off" convention as modules/presence's staleAfterHours.
+    idle_timeout_minutes: int = 0
 
 
 NotificationPriority = Literal["critical", "warning", "information", "success"]
