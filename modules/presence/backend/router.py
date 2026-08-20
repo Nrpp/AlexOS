@@ -191,6 +191,7 @@ async def get_devices(request: Request) -> list[dict]:
             "name": device["name"],
             "event": device.get("event"),
             "lastSeen": device.get("lastSeen"),
+            "lastEventAt": device.get("lastEventAt"),
             "createdAt": device.get("createdAt"),
         }
         for device in devices

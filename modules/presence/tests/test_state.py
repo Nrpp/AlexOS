@@ -174,6 +174,38 @@ def test_touch_device_updates_last_seen_without_changing_event() -> None:
     assert updated["lastSeen"] is not None
 
 
+def test_touch_device_does_not_change_last_event_at() -> None:
+    """lastEventAt (last transition) must stay put across a plain
+    location beacon - that gap between it and lastSeen (any ping) is
+    exactly what the "receiving pings but no arrive/leave change"
+    diagnostic in the Settings UI is built to detect."""
+
+    async def scenario():
+        storage = FakeStorageManager()
+        device = await state.create_device(storage, "Phone")
+        after_event = await state.record_event(storage, device["id"], "arrive")
+        after_touch = await state.touch_device(storage, device["id"])
+        return after_event, after_touch
+
+    after_event, after_touch = _run(scenario())
+    assert after_event is not None and after_touch is not None
+    assert after_touch["lastEventAt"] == after_event["lastEventAt"]
+    assert after_touch["lastSeen"] != after_event["lastSeen"]
+
+
+def test_record_event_sets_last_event_at_alongside_last_seen() -> None:
+    async def scenario():
+        storage = FakeStorageManager()
+        device = await state.create_device(storage, "Phone")
+        assert device["lastEventAt"] is None
+        return await state.record_event(storage, device["id"], "arrive")
+
+    updated = _run(scenario())
+    assert updated is not None
+    assert updated["lastEventAt"] is not None
+    assert updated["lastEventAt"] == updated["lastSeen"]
+
+
 def test_touch_device_for_unknown_device_returns_none() -> None:
     async def scenario():
         storage = FakeStorageManager()
