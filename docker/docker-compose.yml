@@ -11,6 +11,19 @@ services:
       - ../.env
     environment:
       ALEXOS_CORS_ORIGINS: ${ALEXOS_CORS_ORIGINS:-http://localhost}
+      # Forced here, not just left to the Dockerfile's ENV: `env_file`
+      # values (../.env, above) override a Dockerfile's ENV for the same
+      # key, and .env.example used to ship ALEXOS_DATABASE_URL pointing
+      # at a relative, non-persisted path - anyone who copied it into
+      # their own .env unedited got a database (module data, including
+      # every presence device's token) that silently reset on every
+      # `docker compose down`/recreate, since only /srv/api/data (this
+      # path) survives that - the rest of the container's filesystem
+      # doesn't. Setting it here, last, wins over both the Dockerfile
+      # default and a stale/incorrect value from an existing .env, so
+      # this self-heals already-affected deployments with no manual
+      # .env edit required.
+      ALEXOS_DATABASE_URL: sqlite+aiosqlite:////srv/api/data/alexos.db
     # Host networking (Linux only - this is what the Pi runs) so
     # modules/media can discover Cast devices via mDNS/multicast, which
     # doesn't cross Docker's default bridge network. This gives the
