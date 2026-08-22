@@ -12,7 +12,9 @@
     "/bluetooth/devices",
     "/bluetooth/scan",
     "/bluetooth/pair",
-    "/bluetooth/remove"
+    "/bluetooth/remove",
+    "/bluetooth/speaker/status",
+    "/bluetooth/speaker/mode"
   ],
   "widgets": [
     {
@@ -24,6 +26,11 @@
       "id": "bluetooth",
       "name": "Bluetooth",
       "description": "Scan, pair, connect, and remove Bluetooth devices."
+    },
+    {
+      "id": "bluetooth-speaker",
+      "name": "Bluetooth speaker",
+      "description": "Make the Pi discoverable/pairable as a Bluetooth speaker, and see what's connected."
     }
   ],
   "icon": "settings_system_daydream"

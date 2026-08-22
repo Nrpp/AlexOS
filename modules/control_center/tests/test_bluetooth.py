@@ -36,16 +36,56 @@ def test_parse_devices_empty_output() -> None:
 
 def test_parse_info_paired_and_connected() -> None:
     output = "Device AA:BB:CC:DD:EE:01 (public)\n\tPaired: yes\n\tConnected: yes\n\tTrusted: yes\n"
-    assert bluetooth.parse_info(output) == {"paired": True, "connected": True}
+    assert bluetooth.parse_info(output) == {"paired": True, "connected": True, "audioCapable": False}
 
 
 def test_parse_info_known_but_not_connected() -> None:
     output = "Device AA:BB:CC:DD:EE:01 (public)\n\tPaired: yes\n\tConnected: no\n"
-    assert bluetooth.parse_info(output) == {"paired": True, "connected": False}
+    assert bluetooth.parse_info(output) == {"paired": True, "connected": False, "audioCapable": False}
 
 
 def test_parse_info_unknown_device() -> None:
-    assert bluetooth.parse_info("") == {"paired": False, "connected": False}
+    assert bluetooth.parse_info("") == {"paired": False, "connected": False, "audioCapable": False}
+
+
+def test_parse_info_detects_a2dp_audio_sink_capability() -> None:
+    output = (
+        "Device AA:BB:CC:DD:EE:01 (public)\n"
+        "\tPaired: yes\n"
+        "\tConnected: yes\n"
+        "\tUUID: Audio Sink               (0000110b-0000-1000-8000-00805f9b34fb)\n"
+    )
+    assert bluetooth.parse_info(output) == {"paired": True, "connected": True, "audioCapable": True}
+
+
+def test_parse_info_a2dp_uuid_match_is_case_insensitive() -> None:
+    output = "\tUUID: Audio Sink               (0000110B-0000-1000-8000-00805F9B34FB)\n"
+    assert bluetooth.parse_info(output)["audioCapable"] is True
+
+
+def test_parse_info_paired_device_without_audio_sink_is_not_audio_capable() -> None:
+    # e.g. a Bluetooth keyboard - paired and connected, but not a speaker source.
+    output = (
+        "Device AA:BB:CC:DD:EE:02 (public)\n"
+        "\tPaired: yes\n"
+        "\tConnected: yes\n"
+        "\tUUID: Human Interface Device    (00001124-0000-1000-8000-00805f9b34fb)\n"
+    )
+    assert bluetooth.parse_info(output)["audioCapable"] is False
+
+
+def test_parse_adapter_state_all_on() -> None:
+    output = "Controller AA:BB:CC:DD:EE:FF (public)\n\tPowered: yes\n\tDiscoverable: yes\n\tPairable: yes\n"
+    assert bluetooth.parse_adapter_state(output) == {"powered": True, "discoverable": True, "pairable": True}
+
+
+def test_parse_adapter_state_all_off() -> None:
+    output = "Controller AA:BB:CC:DD:EE:FF (public)\n\tPowered: no\n\tDiscoverable: no\n\tPairable: no\n"
+    assert bluetooth.parse_adapter_state(output) == {"powered": False, "discoverable": False, "pairable": False}
+
+
+def test_parse_adapter_state_empty_output() -> None:
+    assert bluetooth.parse_adapter_state("") == {"powered": False, "discoverable": False, "pairable": False}
 
 
 def test_is_available_reflects_whether_bluetoothctl_exists() -> None:

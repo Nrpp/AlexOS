@@ -4,10 +4,12 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from .bluetooth import device_to_payload as bluetooth_device_to_payload
+from .bluetooth import get_adapter_state as bluetooth_get_adapter_state
 from .bluetooth import list_devices as bluetooth_list_devices
 from .bluetooth import pair as bluetooth_pair
 from .bluetooth import remove as bluetooth_remove
 from .bluetooth import scan as bluetooth_scan
+from .bluetooth import set_speaker_mode as bluetooth_set_speaker_mode
 from .wifi import connect as wifi_connect
 from .wifi import disconnect as wifi_disconnect
 from .wifi import list_networks as wifi_list_networks
@@ -68,4 +70,27 @@ async def post_bluetooth_pair(body: BluetoothAddressRequest) -> dict:
 @router.post("/bluetooth/remove")
 async def post_bluetooth_remove(body: BluetoothAddressRequest) -> dict:
     ok, message = await bluetooth_remove(body.address)
+    return {"ok": ok, "message": message}
+
+
+@router.get("/bluetooth/speaker/status")
+async def get_bluetooth_speaker_status() -> dict:
+    adapter_state = await bluetooth_get_adapter_state()
+    if adapter_state is None:
+        return {"available": False, "powered": False, "discoverable": False, "pairable": False, "devices": []}
+    devices = await bluetooth_list_devices()
+    return {
+        "available": True,
+        **adapter_state,
+        "devices": [bluetooth_device_to_payload(device) for device in (devices or [])],
+    }
+
+
+class BluetoothSpeakerModeRequest(BaseModel):
+    enabled: bool
+
+
+@router.post("/bluetooth/speaker/mode")
+async def post_bluetooth_speaker_mode(body: BluetoothSpeakerModeRequest) -> dict:
+    ok, message = await bluetooth_set_speaker_mode(body.enabled)
     return {"ok": ok, "message": message}

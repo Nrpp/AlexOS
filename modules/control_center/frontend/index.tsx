@@ -10,6 +10,7 @@ import {
   CardFooter,
   Input,
   Button,
+  Toggle,
 } from "@alexos/ui";
 
 export interface ControlCenterWidgetProps {
@@ -323,6 +324,137 @@ export function BluetoothWidget({ apiBaseUrl }: ControlCenterWidgetProps) {
               </li>
             ))}
           </ul>
+        </CardContent>
+      )}
+
+      {message ? (
+        <CardFooter className="justify-start">
+          <p className="text-caption text-text-secondary">{message}</p>
+        </CardFooter>
+      ) : null}
+    </Card>
+  );
+}
+
+interface BluetoothSpeakerDevice {
+  address: string;
+  name: string;
+  paired: boolean;
+  connected: boolean;
+  audioCapable: boolean;
+}
+
+interface BluetoothSpeakerStatus {
+  available: boolean;
+  powered: boolean;
+  discoverable: boolean;
+  pairable: boolean;
+  devices: BluetoothSpeakerDevice[];
+}
+
+/** Makes the Pi discoverable/pairable so a phone can pair with it as a
+ * Bluetooth speaker source, and shows which paired device (if any) is
+ * both connected AND advertises the A2DP Audio Sink profile - the
+ * closest this widget can tell you to "yes, that phone is streaming
+ * music to you right now" without diving into BlueZ's MediaTransport1
+ * D-Bus interface for exact playback state.
+ *
+ * Turning this on does NOT by itself make audio come out of anything -
+ * that needs a one-time PipeWire/WirePlumber setup on the Pi's host OS,
+ * outside anything this containerized widget can configure. See
+ * modules/control_center/README.md's "Bluetooth speaker" section for
+ * that setup - this widget is the "let a phone find and pair" half. */
+export function BluetoothSpeakerWidget({ apiBaseUrl }: ControlCenterWidgetProps) {
+  const [status, setStatus] = useState<BluetoothSpeakerStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const refresh = useCallback(() => {
+    if (!apiBaseUrl) return;
+    fetch(`${apiBaseUrl}/api/v1/modules/control_center/bluetooth/speaker/status`)
+      .then((response) => response.json())
+      .then((result: BluetoothSpeakerStatus) => setStatus(result))
+      .catch(() => undefined);
+  }, [apiBaseUrl]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const setSpeakerMode = async (enabled: boolean) => {
+    if (!apiBaseUrl) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/v1/modules/control_center/bluetooth/speaker/mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
+      });
+      const result: { ok: boolean; message: string } = await response.json();
+      if (!result.ok) setMessage(result.message);
+      refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const activeSource = status?.devices.find((device) => device.connected && device.audioCapable) ?? null;
+
+  return (
+    <Card>
+      <CardHeader
+        icon={
+          <span className="material-symbols-rounded" aria-hidden>
+            speaker
+          </span>
+        }
+      >
+        <CardTitle>Bluetooth speaker</CardTitle>
+        <CardSubtitle>Let a phone find and pair with this Pi to stream music to it.</CardSubtitle>
+      </CardHeader>
+
+      {status === null ? (
+        <CardLoading />
+      ) : !status.available ? (
+        <CardEmpty
+          icon="bluetooth_disabled"
+          message="Bluetooth control isn't available - see modules/control_center/README.md."
+        />
+      ) : (
+        <CardContent className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span>Discoverable as a speaker</span>
+              <p className="text-caption text-text-secondary">
+                {status.discoverable && status.pairable
+                  ? "Any nearby phone can find and pair now."
+                  : "Off - existing paired devices can still reconnect on their own."}
+              </p>
+            </div>
+            <Toggle
+              checked={status.discoverable && status.pairable}
+              onCheckedChange={(checked) => void setSpeakerMode(checked)}
+              disabled={busy}
+              label="Toggle Bluetooth speaker discoverability"
+            />
+          </div>
+
+          {activeSource ? (
+            <p className="flex items-center gap-2 text-caption text-success">
+              <span className="material-symbols-rounded text-lg" aria-hidden>
+                graphic_eq
+              </span>
+              {activeSource.name} is connected as an audio source.
+            </p>
+          ) : (
+            <p className="text-caption text-text-secondary">No phone is currently connected as an audio source.</p>
+          )}
+
+          <p className="text-caption text-text-secondary">
+            First time setting this up? The Pi also needs a one-time OS-level audio setup before sound actually
+            comes out of anything - see modules/control_center/README.md.
+          </p>
         </CardContent>
       )}
 
