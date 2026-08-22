@@ -187,18 +187,32 @@ async def set_speaker_mode(enabled: bool) -> tuple[bool, str]:
     powered and any already-trusted device able to reconnect on its
     own, since "stop advertising to new phones" and "disconnect the one
     already playing music" are different actions and conflating them
-    would be surprising."""
+    would be surprising.
+
+    Success/failure is decided from the adapter's actual resulting
+    state (a fresh `bluetoothctl show`), not from each individual
+    command's own return code - confirmed on real hardware that
+    `bluetoothctl power on` against an adapter that's already powered
+    can return `org.bluez.Error.Busy` (a transient/already-there
+    response, not a real failure), which would otherwise surface as a
+    scary false-negative error even though the adapter ends up exactly
+    where it was asked to be."""
     if not is_available():
         return False, "bluetoothctl isn't available."
 
     if enabled:
-        returncode, stdout, stderr = await _run("bluetoothctl", "power", "on")
-        if returncode != 0:
-            return False, (stderr or stdout).strip() or "Couldn't power on the Bluetooth adapter."
+        await _run("bluetoothctl", "power", "on")
         await _run("bluetoothctl", "pairable", "on")
-        returncode, stdout, stderr = await _run("bluetoothctl", "discoverable", "on")
+        await _run("bluetoothctl", "discoverable", "on")
     else:
         await _run("bluetoothctl", "pairable", "off")
-        returncode, stdout, stderr = await _run("bluetoothctl", "discoverable", "off")
+        await _run("bluetoothctl", "discoverable", "off")
 
-    return returncode == 0, (stdout or stderr).strip()
+    state = await get_adapter_state()
+    if state is None:
+        return False, "bluetoothctl became unavailable while changing speaker mode."
+    if enabled:
+        ok = state["powered"] and state["discoverable"] and state["pairable"]
+    else:
+        ok = not state["discoverable"] and not state["pairable"]
+    return ok, "" if ok else "Bluetooth adapter didn't reach the expected state - check `bluetoothctl show` on the Pi."
