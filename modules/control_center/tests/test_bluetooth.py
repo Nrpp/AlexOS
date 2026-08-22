@@ -1,3 +1,4 @@
+import asyncio
 import importlib.util
 import sys
 from pathlib import Path
@@ -15,6 +16,10 @@ def _load_module():
 
 
 bluetooth = _load_module()
+
+
+def _run(coro):
+    return asyncio.run(coro)
 
 
 def test_parse_devices() -> None:
@@ -92,3 +97,66 @@ def test_is_available_reflects_whether_bluetoothctl_exists() -> None:
     # On this project's Windows dev machine, bluetoothctl genuinely
     # doesn't exist - is_available() should say so honestly, not crash.
     assert isinstance(bluetooth.is_available(), bool)
+
+
+# --- set_speaker_mode: judged by resulting adapter state, not by each
+# individual command's own return code ---------------------------------
+
+_SHOW_ALL_ON = "Controller AA:BB:CC:DD:EE:FF (public)\n\tPowered: yes\n\tDiscoverable: yes\n\tPairable: yes\n"
+_SHOW_ALL_OFF = "Controller AA:BB:CC:DD:EE:FF (public)\n\tPowered: yes\n\tDiscoverable: no\n\tPairable: no\n"
+_SHOW_NOT_POWERED = "Controller AA:BB:CC:DD:EE:FF (public)\n\tPowered: no\n\tDiscoverable: no\n\tPairable: no\n"
+
+
+def test_set_speaker_mode_succeeds_despite_a_busy_error_from_power_on(monkeypatch) -> None:
+    """Regression test for a real error confirmed on actual Raspberry
+    Pi hardware: `bluetoothctl power on` against an adapter that's
+    already (or about to be) powered can return
+    `org.bluez.Error.Busy` - a transient/already-there response, not a
+    genuine failure. The adapter still ends up powered/discoverable/
+    pairable, and set_speaker_mode must report that as success rather
+    than surfacing the scary-looking Busy error."""
+
+    async def fake_run(*args, **kwargs):
+        if args[:2] == ("bluetoothctl", "power"):
+            return 1, "", "Failed to set power on: org.bluez.Error.Busy"
+        if args[:2] == ("bluetoothctl", "show"):
+            return 0, _SHOW_ALL_ON, ""
+        return 0, "", ""
+
+    monkeypatch.setattr(bluetooth, "is_available", lambda: True)
+    monkeypatch.setattr(bluetooth, "_run", fake_run)
+    ok, message = _run(bluetooth.set_speaker_mode(True))
+    assert ok is True
+    assert message == ""
+
+
+def test_set_speaker_mode_enable_reports_failure_when_adapter_never_powers_on(monkeypatch) -> None:
+    async def fake_run(*args, **kwargs):
+        if args[:2] == ("bluetoothctl", "show"):
+            return 0, _SHOW_NOT_POWERED, ""
+        return 1, "", "some real error"
+
+    monkeypatch.setattr(bluetooth, "is_available", lambda: True)
+    monkeypatch.setattr(bluetooth, "_run", fake_run)
+    ok, message = _run(bluetooth.set_speaker_mode(True))
+    assert ok is False
+    assert message != ""
+
+
+def test_set_speaker_mode_disable_succeeds_when_discoverable_and_pairable_end_up_off(monkeypatch) -> None:
+    async def fake_run(*args, **kwargs):
+        if args[:2] == ("bluetoothctl", "show"):
+            return 0, _SHOW_ALL_OFF, ""
+        return 0, "", ""
+
+    monkeypatch.setattr(bluetooth, "is_available", lambda: True)
+    monkeypatch.setattr(bluetooth, "_run", fake_run)
+    ok, _message = _run(bluetooth.set_speaker_mode(False))
+    assert ok is True
+
+
+def test_set_speaker_mode_reports_unavailable_bluetoothctl(monkeypatch) -> None:
+    monkeypatch.setattr(bluetooth, "is_available", lambda: False)
+    ok, message = _run(bluetooth.set_speaker_mode(True))
+    assert ok is False
+    assert "isn't available" in message
