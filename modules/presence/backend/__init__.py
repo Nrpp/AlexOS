@@ -17,7 +17,8 @@ from typing import Any
 from app.core.event_bus import EventBus
 from app.core.storage_manager import StorageManager
 
-from . import bluetooth_presence
+from .bluetooth_presence import is_available as bluetooth_is_available
+from .bluetooth_presence import ping as bluetooth_ping
 from .config_store import (
     bluetooth_misses_before_leave,
     bluetooth_ping_timeout_seconds,
@@ -60,7 +61,7 @@ async def _bluetooth_tick_once(event_bus: EventBus, storage: StorageManager) -> 
     tunable. Publishes `presence.updated` only when a device's event
     actually changed, not on every tick, so this doesn't spam the
     Event Bus once a minute for every device that's simply still home."""
-    if not bluetooth_presence.is_available():
+    if not bluetooth_is_available():
         return
     devices = await list_devices(storage)
     changed = False
@@ -70,7 +71,7 @@ async def _bluetooth_tick_once(event_bus: EventBus, storage: StorageManager) -> 
             continue
         device_id = device["id"]
         previous_event = device.get("event")
-        in_range = await bluetooth_presence.ping(address, bluetooth_ping_timeout_seconds())
+        in_range = await bluetooth_ping(address, bluetooth_ping_timeout_seconds())
         if in_range:
             _miss_counts[device_id] = 0
             await record_event(storage, device_id, "arrive")
