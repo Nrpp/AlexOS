@@ -203,6 +203,15 @@ export function BluetoothWidget({ apiBaseUrl }: ControlCenterWidgetProps) {
   const [scanning, setScanning] = useState(false);
   const [busyAddress, setBusyAddress] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+
+  const copyAddress = (address: string) => {
+    navigator.clipboard
+      ?.writeText(address)
+      .then(() => setCopiedAddress(address))
+      .catch(() => undefined);
+    setTimeout(() => setCopiedAddress((current) => (current === address ? null : current)), 2000);
+  };
 
   const refresh = useCallback(() => {
     if (!apiBaseUrl) return;
@@ -302,25 +311,38 @@ export function BluetoothWidget({ apiBaseUrl }: ControlCenterWidgetProps) {
                   <p className="truncate text-body text-text-primary">{device.name}</p>
                   <p className="text-caption text-text-secondary">
                     {device.connected ? "Connected" : device.paired ? "Paired" : "Not paired"}
+                    {" - "}
+                    <span className="font-mono">{device.address}</span>
                   </p>
                 </div>
-                {device.paired ? (
+                <div className="flex shrink-0 items-center gap-1">
                   <Button
                     variant="ghost"
-                    disabled={busyAddress === device.address}
-                    onClick={() => void remove(device)}
+                    onClick={() => copyAddress(device.address)}
+                    aria-label={`Copy ${device.name}'s Bluetooth address`}
                   >
-                    Remove
+                    <span className="material-symbols-rounded text-lg" aria-hidden>
+                      {copiedAddress === device.address ? "check" : "content_copy"}
+                    </span>
                   </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    disabled={busyAddress === device.address}
-                    onClick={() => void pair(device)}
-                  >
-                    Pair
-                  </Button>
-                )}
+                  {device.paired ? (
+                    <Button
+                      variant="ghost"
+                      disabled={busyAddress === device.address}
+                      onClick={() => void remove(device)}
+                    >
+                      Remove
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      disabled={busyAddress === device.address}
+                      onClick={() => void pair(device)}
+                    >
+                      Pair
+                    </Button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
