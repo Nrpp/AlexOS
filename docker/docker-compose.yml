@@ -33,6 +33,13 @@ services:
     # dropped because it's incompatible with network_mode: host - the
     # container binds directly to the host's port 8000.
     network_mode: host
+    # NET_RAW is already in Docker's default capability set (enough for
+    # most of what's here); NET_ADMIN is not, and modules/presence's
+    # Bluetooth-presence polling needs it for l2ping's raw HCI socket
+    # (the same `bluez` package modules/control_center already installs -
+    # see apps/api/Dockerfile). Narrowly added, not `privileged: true`.
+    cap_add:
+      - NET_ADMIN
     volumes:
       - alexos_data:/srv/api/data
       # Lets modules/servers list and start/stop/restart Docker

@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 
+from .bluetooth_presence import normalize_address as normalize_bluetooth_address
 from .config_store import unlock_ttl_minutes
 from .rate_limit import is_rate_limited, record_failure
 from .rate_limit import reset as reset_rate_limit
@@ -33,6 +34,7 @@ from .state import (
     lock as lock_session,
     record_event,
     rename_device,
+    set_device_bluetooth_address,
     set_pin,
     set_primary_device_id,
     touch_device,
@@ -192,6 +194,7 @@ async def get_devices(request: Request) -> list[dict]:
             "event": device.get("event"),
             "lastSeen": device.get("lastSeen"),
             "lastEventAt": device.get("lastEventAt"),
+            "bluetoothAddress": device.get("bluetoothAddress"),
             "createdAt": device.get("createdAt"),
         }
         for device in devices
@@ -244,6 +247,30 @@ async def post_primary_device(device_id: str, request: Request) -> dict:
         raise HTTPException(status_code=404, detail="Device not found.")
     await set_primary_device_id(request.app.state.storage_manager, device_id)
     return await _publish_status(request)
+
+
+class SetBluetoothAddressRequest(BaseModel):
+    bluetoothAddress: str | None = None
+
+
+@router.post("/devices/{device_id}/bluetooth")
+async def post_device_bluetooth(device_id: str, body: SetBluetoothAddressRequest, request: Request) -> dict:
+    """Sets or clears the device's classic Bluetooth (BR/EDR) address for
+    Bluetooth-presence polling - see bluetooth_presence.py and the
+    README's "Bluetooth presence" section. An empty/missing address
+    clears it (stops polling this device); anything else must look
+    like a MAC address."""
+    storage = request.app.state.storage_manager
+    device = await get_device(storage, device_id)
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found.")
+    normalized = normalize_bluetooth_address(body.bluetoothAddress)
+    if body.bluetoothAddress and normalized is None:
+        raise HTTPException(
+            status_code=400, detail="bluetoothAddress must look like AA:BB:CC:DD:EE:FF, or be empty to remove it."
+        )
+    device = await set_device_bluetooth_address(storage, device_id, normalized)
+    return {"id": device["id"], "bluetoothAddress": device.get("bluetoothAddress")}
 
 
 # --- PIN and lock/unlock ---------------------------------------------------

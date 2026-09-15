@@ -64,6 +64,7 @@ async def create_device(storage: StorageManager, name: str) -> dict[str, Any]:
         "event": None,
         "lastSeen": None,
         "lastEventAt": None,
+        "bluetoothAddress": None,
         "createdAt": _iso(_now()),
     }
     devices.append(device)
@@ -81,6 +82,22 @@ async def rename_device(storage: StorageManager, device_id: str, name: str) -> d
     return None
 
 
+async def set_device_bluetooth_address(
+    storage: StorageManager, device_id: str, address: str | None
+) -> dict[str, Any] | None:
+    """`address` must already be normalized/validated by the caller
+    (see `bluetooth_presence.normalize_address`) - this just stores it,
+    or clears it back to None to stop Bluetooth-presence polling for
+    this device."""
+    devices = await list_devices(storage)
+    for device in devices:
+        if device["id"] == device_id:
+            device["bluetoothAddress"] = address
+            await _save_devices(storage, devices)
+            return device
+    return None
+
+
 async def delete_device(storage: StorageManager, device_id: str) -> bool:
     devices = await list_devices(storage)
     remaining = [device for device in devices if device["id"] != device_id]
@@ -92,14 +109,25 @@ async def delete_device(storage: StorageManager, device_id: str) -> bool:
     return True
 
 
-async def record_event(storage: StorageManager, device_id: str, event: str) -> dict[str, Any] | None:
+async def record_event(
+    storage: StorageManager, device_id: str, event: str, *, touch_last_seen: bool = True
+) -> dict[str, Any] | None:
+    """`touch_last_seen=False` is for a transition *inferred* from an
+    absence of contact - Bluetooth presence's "leave" once a device
+    stops answering pings (see `bluetooth_presence.py`) - where
+    stamping `lastSeen` as "now" would be a lie: nothing was actually
+    heard from the device just now, that's the whole reason it's being
+    marked away. Every other caller (the webhook, OwnTracks) is a
+    transition the phone itself just reported, i.e. real contact, so
+    they keep the default of also refreshing `lastSeen`."""
     devices = await list_devices(storage)
     for device in devices:
         if device["id"] == device_id:
             now = _iso(_now())
             device["event"] = event
-            device["lastSeen"] = now
             device["lastEventAt"] = now
+            if touch_last_seen:
+                device["lastSeen"] = now
             await _save_devices(storage, devices)
             return device
     return None
@@ -238,6 +266,7 @@ async def compute_status(storage: StorageManager) -> dict[str, Any]:
                 "event": device.get("event"),
                 "lastSeen": device.get("lastSeen"),
                 "lastEventAt": device.get("lastEventAt"),
+                "bluetoothAddress": device.get("bluetoothAddress"),
             }
             for device in devices
         ],

@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
     # set before loading so shutdown can cancel exactly the ones modules
     # spawned, not anything else running on the loop.
     tasks_before_modules = asyncio.all_tasks()
-    for name, module_router in module_manager.load_backend_routers(event_bus):
+    for name, module_router in module_manager.load_backend_routers(event_bus, storage_manager):
         app.include_router(module_router, prefix=f"/api/v1/modules/{name}", tags=[name])
     module_background_tasks = asyncio.all_tasks() - tasks_before_modules
 
