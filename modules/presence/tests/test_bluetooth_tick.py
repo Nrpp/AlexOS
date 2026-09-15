@@ -33,7 +33,6 @@ def _load_backend():
 
 _backend = _load_backend()
 state = sys.modules[f"{_PACKAGE_NAME}.state"]
-bluetooth_presence = sys.modules[f"{_PACKAGE_NAME}.bluetooth_presence"]
 config_store = sys.modules[f"{_PACKAGE_NAME}.config_store"]
 
 
@@ -72,7 +71,7 @@ def setup_function() -> None:
 
 
 def test_tick_does_nothing_when_l2ping_is_unavailable(monkeypatch) -> None:
-    monkeypatch.setattr(bluetooth_presence, "is_available", lambda: False)
+    monkeypatch.setattr(_backend, "bluetooth_is_available", lambda: False)
 
     async def scenario():
         storage = FakeStorageManager()
@@ -88,12 +87,12 @@ def test_tick_does_nothing_when_l2ping_is_unavailable(monkeypatch) -> None:
 
 
 def test_tick_ignores_devices_without_a_bluetooth_address(monkeypatch) -> None:
-    monkeypatch.setattr(bluetooth_presence, "is_available", lambda: True)
+    monkeypatch.setattr(_backend, "bluetooth_is_available", lambda: True)
 
     async def fake_ping(address, timeout_seconds=5.0):
         raise AssertionError("ping() must not be called for a device with no bluetoothAddress")
 
-    monkeypatch.setattr(bluetooth_presence, "ping", fake_ping)
+    monkeypatch.setattr(_backend, "bluetooth_ping", fake_ping)
 
     async def scenario():
         storage = FakeStorageManager()
@@ -104,12 +103,12 @@ def test_tick_ignores_devices_without_a_bluetooth_address(monkeypatch) -> None:
 
 
 def test_tick_marks_arrive_immediately_on_a_successful_ping(monkeypatch) -> None:
-    monkeypatch.setattr(bluetooth_presence, "is_available", lambda: True)
+    monkeypatch.setattr(_backend, "bluetooth_is_available", lambda: True)
 
     async def fake_ping(address, timeout_seconds=5.0):
         return True
 
-    monkeypatch.setattr(bluetooth_presence, "ping", fake_ping)
+    monkeypatch.setattr(_backend, "bluetooth_ping", fake_ping)
 
     async def scenario():
         storage = FakeStorageManager()
@@ -126,12 +125,12 @@ def test_tick_marks_arrive_immediately_on_a_successful_ping(monkeypatch) -> None
 
 
 def test_tick_does_not_republish_while_already_marked_arrive(monkeypatch) -> None:
-    monkeypatch.setattr(bluetooth_presence, "is_available", lambda: True)
+    monkeypatch.setattr(_backend, "bluetooth_is_available", lambda: True)
 
     async def fake_ping(address, timeout_seconds=5.0):
         return True
 
-    monkeypatch.setattr(bluetooth_presence, "ping", fake_ping)
+    monkeypatch.setattr(_backend, "bluetooth_ping", fake_ping)
 
     async def scenario():
         storage = FakeStorageManager()
@@ -152,13 +151,13 @@ def test_tick_requires_consecutive_misses_before_leaving(monkeypatch) -> None:
     """A single dropped ping mustn't bounce the dashboard into away
     mode - real-world Bluetooth ranging is flaky. Only
     bluetoothMissesBeforeLeave *consecutive* failures should flip it."""
-    monkeypatch.setattr(bluetooth_presence, "is_available", lambda: True)
+    monkeypatch.setattr(_backend, "bluetooth_is_available", lambda: True)
     config_store.configure({"bluetoothMissesBeforeLeave": 3})
 
     async def fake_ping(address, timeout_seconds=5.0):
         return False
 
-    monkeypatch.setattr(bluetooth_presence, "ping", fake_ping)
+    monkeypatch.setattr(_backend, "bluetooth_ping", fake_ping)
 
     async def scenario():
         storage = FakeStorageManager()
@@ -185,13 +184,13 @@ def test_tick_requires_consecutive_misses_before_leaving(monkeypatch) -> None:
 def test_tick_leave_does_not_touch_last_seen(monkeypatch) -> None:
     """The "leave" here is inferred from silence, not real contact - see
     record_event's touch_last_seen docstring."""
-    monkeypatch.setattr(bluetooth_presence, "is_available", lambda: True)
+    monkeypatch.setattr(_backend, "bluetooth_is_available", lambda: True)
     config_store.configure({"bluetoothMissesBeforeLeave": 1})
 
     async def fake_ping(address, timeout_seconds=5.0):
         return False
 
-    monkeypatch.setattr(bluetooth_presence, "ping", fake_ping)
+    monkeypatch.setattr(_backend, "bluetooth_ping", fake_ping)
 
     async def scenario():
         storage = FakeStorageManager()
@@ -208,14 +207,14 @@ def test_tick_leave_does_not_touch_last_seen(monkeypatch) -> None:
 
 
 def test_a_successful_ping_resets_the_miss_counter(monkeypatch) -> None:
-    monkeypatch.setattr(bluetooth_presence, "is_available", lambda: True)
+    monkeypatch.setattr(_backend, "bluetooth_is_available", lambda: True)
     config_store.configure({"bluetoothMissesBeforeLeave": 2})
     ping_results = iter([False, True, False])
 
     async def fake_ping(address, timeout_seconds=5.0):
         return next(ping_results)
 
-    monkeypatch.setattr(bluetooth_presence, "ping", fake_ping)
+    monkeypatch.setattr(_backend, "bluetooth_ping", fake_ping)
 
     async def scenario():
         storage = FakeStorageManager()
