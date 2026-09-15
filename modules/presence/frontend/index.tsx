@@ -26,6 +26,10 @@ interface PresenceDevice {
   lastSeen: string | null;
   /** Only a transition (arrive/leave) - when `event` itself last changed. */
   lastEventAt: string | null;
+  /** Classic Bluetooth (BR/EDR) address this device is polled at, or
+   * null if Bluetooth presence isn't configured for it - see the
+   * module README's "Bluetooth presence" section. */
+  bluetoothAddress: string | null;
   createdAt?: string;
 }
 
@@ -151,6 +155,7 @@ function DeviceRow({
   onRename,
   onDelete,
   onSetPrimary,
+  onSetBluetoothAddress,
   busy,
 }: {
   device: PresenceDevice;
@@ -161,11 +166,14 @@ function DeviceRow({
   onRename: (name: string) => void;
   onDelete: () => void;
   onSetPrimary: () => void;
+  onSetBluetoothAddress: (address: string) => void;
   busy: boolean;
 }) {
   const [renaming, setRenaming] = useState(false);
   const [nameDraft, setNameDraft] = useState(device.name);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [editingBluetooth, setEditingBluetooth] = useState(false);
+  const [bluetoothDraft, setBluetoothDraft] = useState(device.bluetoothAddress ?? "");
 
   // Pings are arriving (lastSeen is moving) but no transition has fired
   // since - almost always a Region that's missing, has "Share" off, or
@@ -265,6 +273,49 @@ function DeviceRow({
           "Share" enabled, and that you've crossed its boundary at least once since adding it.
         </p>
       ) : null}
+
+      <div className="flex flex-col gap-1">
+        <p className="text-caption text-text-secondary">
+          Bluetooth presence:{" "}
+          {device.bluetoothAddress ? <span className="font-mono">{device.bluetoothAddress}</span> : "not set"}
+        </p>
+        {editingBluetooth ? (
+          <div className="flex items-center gap-2">
+            <Input
+              value={bluetoothDraft}
+              onChange={(event) => setBluetoothDraft(event.target.value)}
+              placeholder="AA:BB:CC:DD:EE:FF"
+              aria-label={`Bluetooth address for ${device.name}`}
+              className="h-10 flex-1 font-mono text-caption"
+            />
+            <Button
+              variant="ghost"
+              disabled={busy}
+              onClick={() => {
+                onSetBluetoothAddress(bluetoothDraft.trim());
+                setEditingBluetooth(false);
+              }}
+            >
+              Save
+            </Button>
+            <Button variant="ghost" onClick={() => setEditingBluetooth(false)}>
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            disabled={busy}
+            onClick={() => {
+              setBluetoothDraft(device.bluetoothAddress ?? "");
+              setEditingBluetooth(true);
+            }}
+            className="self-start"
+          >
+            {device.bluetoothAddress ? "Change" : "Set"} Bluetooth address
+          </Button>
+        )}
+      </div>
 
       {revealed === null ? (
         <Button variant="secondary" disabled={busy} onClick={onReveal} className="self-start">
@@ -395,6 +446,14 @@ export function PresenceSettings({ apiBaseUrl }: PresenceWidgetProps) {
   const setPrimary = (deviceId: string) =>
     runAction(() => fetchJson(`${apiBaseUrl}/api/v1/modules/presence/devices/${deviceId}/primary`, { method: "POST" }));
 
+  const setBluetoothAddress = (deviceId: string, address: string) =>
+    runAction(() =>
+      fetchJson(`${apiBaseUrl}/api/v1/modules/presence/devices/${deviceId}/bluetooth`, {
+        method: "POST",
+        body: JSON.stringify({ bluetoothAddress: address || null }),
+      }),
+    );
+
   const lockNow = () => runAction(() => fetchJson(`${apiBaseUrl}/api/v1/modules/presence/lock`, { method: "POST" }));
 
   const submitPin = async () => {
@@ -467,6 +526,7 @@ export function PresenceSettings({ apiBaseUrl }: PresenceWidgetProps) {
                     onRename={(name) => void rename(device.id, name)}
                     onDelete={() => void remove(device.id)}
                     onSetPrimary={() => void setPrimary(device.id)}
+                    onSetBluetoothAddress={(address) => void setBluetoothAddress(device.id, address)}
                     busy={busy}
                   />
                 ))}

@@ -35,6 +35,43 @@ copy elsewhere without thinking about it again. Comment out the
 `tailscaled.sock` volume line if you don't run Tailscale on this Pi;
 the widget shows a clear "not available" state instead of erroring.
 
+## Troubleshooting: running Pi-hole on the same Pi
+
+Tailscale and Pi-hole both want to be the Pi's DNS answer, which is
+where the conflict comes from - it isn't an AlexOS bug, it's the two
+services fighting over the same job:
+
+- **MagicDNS/`--accept-dns`.** By default, `tailscaled` rewrites the
+  Pi's DNS resolution (via `systemd-resolved`) to point at Tailscale's
+  own resolver (`100.100.100.100`), so tailnet hostnames resolve. If
+  Pi-hole is also meant to be this Pi's resolver, the two collide - the
+  fix is to turn Tailscale's DNS override off on this Pi specifically:
+  ```bash
+  sudo tailscale set --accept-dns=false
+  ```
+  This only stops `tailscaled` from managing *this device's own* DNS
+  resolution - the tailnet connection itself (reaching other devices,
+  `modules/presence`'s webhook exposure via `tailscale serve`/`funnel`,
+  etc.) is unaffected.
+- **`systemd-resolved`'s stub listener.** Raspberry Pi OS's default
+  `systemd-resolved` binds `127.0.0.53:53` itself. Pi-hole's own
+  install docs already have you disable this
+  (`DNSStubListener=no` in `/etc/systemd/resolved.conf`, then
+  `sudo systemctl restart systemd-resolved`) - if Tailscale's DNS
+  override was re-enabling/fighting this, `--accept-dns=false` above
+  should resolve it too.
+- **Port 80** is a separate, unrelated collision some owners hit at
+  the same time (Pi-hole's own web admin also listens there) - see
+  `docs/INSTALL_RPI5.md`'s Troubleshooting section for that one.
+- **Want tailnet devices to use Pi-hole for DNS too** (e.g. so a phone
+  reaching AlexOS over Tailscale also gets ad-blocking)? Don't do that
+  by leaving `--accept-dns` on here - add Pi-hole's Tailscale IP as a
+  **Global nameserver** in the
+  [Tailscale admin console's DNS settings](https://login.tailscale.com/admin/dns)
+  instead. Setting it on the Pi-hole host itself would create a loop
+  (this device asking Tailscale's resolver, which is configured to
+  forward back to Pi-hole, which is this device).
+
 ## Verification status
 
 This project's dev machine turned out to have the Tailscale Windows

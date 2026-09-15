@@ -9,6 +9,7 @@ into `modules/` is the entire installation process for this milestone.
 from __future__ import annotations
 
 import importlib.util
+import inspect
 import json
 import logging
 import sys
@@ -20,6 +21,7 @@ from fastapi import APIRouter
 from pydantic import ValidationError
 
 from app.core.event_bus import EventBus
+from app.core.storage_manager import StorageManager
 from app.models.schemas import ModuleManifest
 
 logger = logging.getLogger("alexos.module_manager")
@@ -87,11 +89,22 @@ class ModuleManager:
             logger.warning("Ignoring invalid config.json for module '%s' (%s)", module_dir.name, error)
             return {}
 
-    def load_backend_routers(self, event_bus: EventBus) -> list[tuple[str, APIRouter]]:
+    def load_backend_routers(
+        self, event_bus: EventBus, storage_manager: StorageManager
+    ) -> list[tuple[str, APIRouter]]:
         """Dynamically import each module's backend package, mount its router if
         any, and call its optional `on_load(event_bus, config)` startup hook -
         the only way a module gets a handle to the Event Bus and its own
-        config.json."""
+        config.json.
+
+        A module whose `on_load` also declares a `storage_manager` parameter
+        additionally gets the Storage Manager passed as that keyword argument -
+        needed by background work that runs outside any HTTP request (no
+        `request.app.state` to reach through), e.g. modules/presence's
+        Bluetooth-presence tick loop. Checked via `inspect.signature` rather
+        than always passing a third positional argument, so every other
+        module's plain `on_load(event_bus, config)` keeps working unchanged -
+        see docs/MODULES.md."""
         mounted: list[tuple[str, APIRouter]] = []
         for module in self._modules.values():
             if not module.has_backend:
@@ -110,7 +123,10 @@ class ModuleManager:
             on_load = getattr(imported, "on_load", None)
             if callable(on_load):
                 try:
-                    on_load(event_bus, module.config)
+                    if "storage_manager" in inspect.signature(on_load).parameters:
+                        on_load(event_bus, module.config, storage_manager=storage_manager)
+                    else:
+                        on_load(event_bus, module.config)
                 except Exception:
                     logger.exception("on_load() failed for module '%s'", module.manifest.name)
 

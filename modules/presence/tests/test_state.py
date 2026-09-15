@@ -95,6 +95,39 @@ def test_created_device_starts_with_no_event() -> None:
     device = _run(scenario())
     assert device["event"] is None
     assert device["lastSeen"] is None
+    assert device["bluetoothAddress"] is None
+
+
+def test_set_device_bluetooth_address() -> None:
+    async def scenario():
+        storage = FakeStorageManager()
+        created = await state.create_device(storage, "Phone")
+        updated = await state.set_device_bluetooth_address(storage, created["id"], "AA:BB:CC:DD:EE:FF")
+        return updated
+
+    updated = _run(scenario())
+    assert updated is not None
+    assert updated["bluetoothAddress"] == "AA:BB:CC:DD:EE:FF"
+
+
+def test_set_device_bluetooth_address_to_none_clears_it() -> None:
+    async def scenario():
+        storage = FakeStorageManager()
+        created = await state.create_device(storage, "Phone")
+        await state.set_device_bluetooth_address(storage, created["id"], "AA:BB:CC:DD:EE:FF")
+        return await state.set_device_bluetooth_address(storage, created["id"], None)
+
+    updated = _run(scenario())
+    assert updated is not None
+    assert updated["bluetoothAddress"] is None
+
+
+def test_set_device_bluetooth_address_for_unknown_device_returns_none() -> None:
+    async def scenario():
+        storage = FakeStorageManager()
+        return await state.set_device_bluetooth_address(storage, "does-not-exist", "AA:BB:CC:DD:EE:FF")
+
+    assert _run(scenario()) is None
 
 
 def test_rename_device() -> None:
@@ -159,6 +192,27 @@ def test_record_event_for_unknown_device_returns_none() -> None:
         return await state.record_event(storage, "does-not-exist", "arrive")
 
     assert _run(scenario()) is None
+
+
+def test_record_event_with_touch_last_seen_false_leaves_last_seen_untouched() -> None:
+    """Regression test for Bluetooth presence's "leave", which is
+    *inferred* from an absence of contact, not an actual contact -
+    stamping lastSeen as "now" there would misrepresent when the
+    device was last genuinely heard from. See record_event's
+    docstring."""
+
+    async def scenario():
+        storage = FakeStorageManager()
+        device = await state.create_device(storage, "Phone")
+        after_arrive = await state.record_event(storage, device["id"], "arrive")
+        after_leave = await state.record_event(storage, device["id"], "leave", touch_last_seen=False)
+        return after_arrive, after_leave
+
+    after_arrive, after_leave = _run(scenario())
+    assert after_arrive is not None and after_leave is not None
+    assert after_leave["event"] == "leave"
+    assert after_leave["lastEventAt"] != after_arrive["lastEventAt"]
+    assert after_leave["lastSeen"] == after_arrive["lastSeen"]
 
 
 def test_touch_device_updates_last_seen_without_changing_event() -> None:

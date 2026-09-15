@@ -62,6 +62,20 @@ manual registration) and:
 A module needs neither of these - a manifest with only frontend widgets
 is entirely valid.
 
+### Background work that needs storage: the optional `storage_manager` parameter
+
+Background work started from `on_load` has no HTTP request behind it, so
+there's no `request.app.state` to reach the Storage Manager through the
+way every route handler does. If `on_load` declares a `storage_manager`
+parameter (`def on_load(event_bus, config, storage_manager): ...`),
+`load_backend_routers` passes it as that keyword argument - checked via
+`inspect.signature`, not a third positional argument, so every module
+that only declares `on_load(event_bus, config)` keeps working unchanged.
+`modules/presence`'s Bluetooth-presence tick loop is the first module
+that needs this - it polls for a device's Bluetooth radio periodically
+and has to read/update that device's stored state on every tick, with no
+request to hang it off.
+
 ### Import gotcha: `from .sibling import name`, never `from . import sibling`
 
 Because each module's backend is loaded via a hand-built

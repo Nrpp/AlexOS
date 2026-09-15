@@ -9,10 +9,12 @@ asks for a PIN before showing the real dashboard.
 
 **No native app.** Building/maintaining a native iOS/Android app for
 one feature isn't worth it, so this module leans on functionality
-already on the phone. Two ways to feed it, both ending at the same
+already on the phone (or, for Bluetooth presence, on the Pi's own
+Bluetooth radio). Three ways to feed it, all ending at the same
 "device X arrived/left" state - AlexOS never receives raw GPS and
 never does geofence math itself either way, so a device's stored row
-is just a name, a token, and the last event it reported:
+is just a name, a token, the last event it reported, and (optionally)
+a Bluetooth address:
 
 - **iOS Shortcuts' personal Automations** and **Android's Tasker** (or
   any similar automation app) can watch a geofence at the OS level and
@@ -30,6 +32,11 @@ is just a name, a token, and the last event it reported:
   stays the iOS path (and works on 16.7); if the owner's iPhone is
   ever on a newer iOS, OwnTracks becomes an option there too, same
   `/owntracks` endpoint, no code changes needed.
+- **Bluetooth presence** - the Pi itself periodically pings a device's
+  classic Bluetooth address to check whether it's in range, instead of
+  waiting for the phone to report a geofence crossing. No app, no
+  automation setup on the phone at all - see "Bluetooth presence"
+  below.
 
 **Per-device secret tokens, not a shared one.** AlexOS's API
 (`apps/api/`) has no authentication anywhere else in the system, by
@@ -125,6 +132,9 @@ logged and never returned in bulk - only via the explicit `GET
     /devices/{id}`, `GET /devices/{id}/token`, `POST
     /devices/{id}/primary` - manage devices and which one is
     authoritative for presence.
+  - `POST /devices/{id}/bluetooth` - `{ bluetoothAddress }`. Sets or
+    clears the device's classic Bluetooth address for Bluetooth
+    presence (see below); an empty/`null` value clears it.
   - `POST /pin` - set or change the PIN (the current PIN is required
     to change an existing one; not required to set the first one).
   - `POST /unlock` - `{ pin }`. Starts an unlock session that expires
@@ -170,6 +180,62 @@ logged and never returned in bulk - only via the explicit `GET
     normal dashboard, so re-locking on the way out doesn't require a
     trip through Settings.
 
+## Bluetooth presence
+
+A third way to feed a device's presence, alongside the webhook and
+OwnTracks paths above - and the only one where AlexOS itself does the
+checking instead of waiting for the phone to report in. Useful as a
+faster/local-only confirmation alongside GPS geofencing, or as the only
+signal for an owner who'd rather not install a tracking app at all.
+
+**How it works.** Set a device's classic Bluetooth (BR/EDR) address in
+Settings, and the Pi periodically pings it (`l2ping`, the same
+technique Home Assistant's classic `bluetooth_tracker` integration
+uses) to check whether it's currently in range - no pairing, no
+connection, and no app running on the phone required, just Bluetooth
+turned on. This deliberately targets the phone's *classic* Bluetooth
+address, not BLE: modern iOS/Android rotate the BLE address used for
+scanning/advertising for privacy, but the classic BR/EDR address (what
+the phone uses for calls, audio, tethering, ...) stays fixed, so
+polling it keeps working indefinitely once configured.
+
+**Finding the address.** The easiest way is to pair the phone with the
+Pi once via `modules/control_center`'s Bluetooth widget (Settings ->
+WiFi & Bluetooth) - its device list shows the address once paired.
+(Android also shows it directly: Settings -> About phone -> Status ->
+Bluetooth address.) Paste that address into the device's "Bluetooth
+presence" field in **Presence & away mode** settings.
+
+**Same event/lastSeen model as everything else.** A successful ping
+calls the same `record_event(..., "arrive")` the webhook uses, so
+`compute_status`/`GET /status` need no special case for it - if both a
+webhook/OwnTracks path *and* a Bluetooth address are configured for the
+same device, whichever reported most recently wins, same as any other
+tie between two update sources.
+
+**Hysteresis on the way out, not on the way in.** A device flips to
+"arrive" the moment a single ping succeeds, but only flips to "leave"
+after `config.json`'s `bluetoothMissesBeforeLeave` *consecutive* failed
+pings (3 by default) - real-world Bluetooth range is flaky, and a
+single dropped ping (phone briefly out of range, radio contention,
+...) shouldn't bounce the dashboard into away mode. A "leave" from a
+run of misses is inferred from *silence*, not an actual message from
+the phone, so unlike every other transition in this module it does
+**not** refresh the device's `lastSeen` - see `record_event`'s
+`touch_last_seen` parameter in `backend/state.py`. Miss counts are
+kept in memory only (not persisted), so a container restart mid-away
+just costs one extra poll cycle before "leave" is re-confirmed.
+
+**Real host integration, same tradeoff category as Bluetooth speaker
+mode.** `l2ping` needs direct access to the host's Bluetooth adapter -
+the `bluez` package `modules/control_center` already installs, plus
+the `NET_ADMIN` capability added for the `api` service in
+`docker/docker-compose.yml` (`NET_RAW` is already in Docker's default
+capability set). **Not verified against real hardware** - this needs a
+first real check on the owner's own Pi and phone, the same as
+`modules/control_center`'s Bluetooth speaker mode was before that
+verification happened.
+
 ## The `"personal"` manifest field
 
 `ModuleManifest` (`apps/api/app/models/schemas.py`, mirrored in
@@ -198,7 +264,10 @@ go here (this file is committed to git):
 ```json
 {
   "unlockTtlMinutes": 15,
-  "staleAfterHours": 24
+  "staleAfterHours": 24,
+  "bluetoothPollIntervalSeconds": 30,
+  "bluetoothPingTimeoutSeconds": 5,
+  "bluetoothMissesBeforeLeave": 3
 }
 ```
 
@@ -208,6 +277,14 @@ go here (this file is committed to git):
   last "arrive" is older than this, presence is treated as unknown
   (locked/away), not "still home." Set to `0` to disable this check
   entirely (trust the last event no matter its age) - not recommended.
+- `bluetoothPollIntervalSeconds` - how often the Pi pings every device
+  that has a Bluetooth address configured (see "Bluetooth presence"
+  below).
+- `bluetoothPingTimeoutSeconds` - how long a single `l2ping` is allowed
+  to take before it's counted as a miss.
+- `bluetoothMissesBeforeLeave` - consecutive failed pings required
+  before a device flips to "leave." Higher = slower to notice someone
+  left, but more tolerant of Bluetooth's normal flakiness.
 
 No new environment variable is needed for this module - device
 tokens and the PIN are generated and stored at runtime via the
@@ -314,13 +391,21 @@ events matter for lock/unlock - other registered devices (a second
 phone, a partner's phone if the owner wants to track it too) still
 show their own status but don't affect the lock.
 
-### 5. Set a PIN
+### 5. (Optional) Bluetooth presence
+
+Settings -> **Presence & away mode** -> under the device -> **Set
+Bluetooth address** -> paste the device's classic Bluetooth address
+(see "Bluetooth presence" above for how to find it). This works
+standalone or alongside the webhook/OwnTracks setup above for the same
+device - whichever reports most recently wins.
+
+### 6. Set a PIN
 
 Settings → **Presence & away mode** → **Away-mode PIN** section → set
 a 4-8 digit PIN. Away mode can't be unlocked from the ambient screen
 until a PIN exists.
 
-### 6. Exposing the webhook outside your LAN
+### 7. Exposing the webhook outside your LAN
 
 The owner already runs Tailscale (`modules/tailscale/` in this repo).
 The recommended way to reach `/webhook` and `/owntracks` from outside

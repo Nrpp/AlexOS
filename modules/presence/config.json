@@ -1,4 +1,7 @@
 {
   "unlockTtlMinutes": 15,
-  "staleAfterHours": 24
+  "staleAfterHours": 24,
+  "bluetoothPollIntervalSeconds": 30,
+  "bluetoothPingTimeoutSeconds": 5,
+  "bluetoothMissesBeforeLeave": 3
 }

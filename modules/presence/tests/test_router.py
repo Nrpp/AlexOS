@@ -313,6 +313,42 @@ def test_rename_and_delete_device() -> None:
     assert client.get("/devices").json() == []
 
 
+def test_setting_a_valid_bluetooth_address() -> None:
+    client = _make_client()
+    device = _register_device(client)
+
+    response = client.post(f"/devices/{device['id']}/bluetooth", json={"bluetoothAddress": "aa:bb:cc:dd:ee:ff"})
+    assert response.status_code == 200
+    assert response.json()["bluetoothAddress"] == "AA:BB:CC:DD:EE:FF"
+
+    listed = client.get("/devices").json()
+    assert listed[0]["bluetoothAddress"] == "AA:BB:CC:DD:EE:FF"
+
+
+def test_clearing_a_bluetooth_address_with_an_empty_value() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    client.post(f"/devices/{device['id']}/bluetooth", json={"bluetoothAddress": "AA:BB:CC:DD:EE:FF"})
+
+    response = client.post(f"/devices/{device['id']}/bluetooth", json={"bluetoothAddress": None})
+    assert response.status_code == 200
+    assert response.json()["bluetoothAddress"] is None
+
+
+def test_setting_a_malformed_bluetooth_address_is_rejected() -> None:
+    client = _make_client()
+    device = _register_device(client)
+
+    response = client.post(f"/devices/{device['id']}/bluetooth", json={"bluetoothAddress": "not-a-mac"})
+    assert response.status_code == 400
+
+
+def test_setting_a_bluetooth_address_for_an_unknown_device_is_404() -> None:
+    client = _make_client()
+    response = client.post("/devices/does-not-exist/bluetooth", json={"bluetoothAddress": "AA:BB:CC:DD:EE:FF"})
+    assert response.status_code == 404
+
+
 def test_setting_primary_device_switches_which_device_drives_home() -> None:
     client = _make_client()
     phone_a = _register_device(client, "Phone A")

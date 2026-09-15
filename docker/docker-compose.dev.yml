@@ -15,6 +15,14 @@ services:
       # (modules/ isn't three parents up from app/settings.py in here),
       # so point ModuleManager at the bind-mounted modules folder explicitly.
       ALEXOS_MODULES_DIR: /srv/modules
+    # Same tradeoff as docker-compose.yml (production) for
+    # modules/presence's Bluetooth-presence polling (l2ping). Note this
+    # dev compose file doesn't use `network_mode: host` like production
+    # does, so even with this capability, l2ping may not reach the
+    # host's actual Bluetooth adapter here - Bluetooth-presence is meant
+    # to be tested against the production compose file on the Pi.
+    cap_add:
+      - NET_ADMIN
     volumes:
       - ../apps/api:/srv/api
       - ../modules:/srv/modules
