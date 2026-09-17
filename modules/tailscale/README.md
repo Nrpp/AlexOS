@@ -60,9 +60,10 @@ services fighting over the same job:
   `sudo systemctl restart systemd-resolved`) - if Tailscale's DNS
   override was re-enabling/fighting this, `--accept-dns=false` above
   should resolve it too.
-- **Port 80** is a separate, unrelated collision some owners hit at
-  the same time (Pi-hole's own web admin also listens there) - see
-  `docs/INSTALL_RPI5.md`'s Troubleshooting section for that one.
+- **Port 80** was a separate, unrelated collision some owners used to
+  hit at the same time (Pi-hole's own web admin also listens there) -
+  AlexOS's `web` service now defaults to port 8080 instead specifically
+  to avoid it, see `docs/INSTALL_RPI5.md`'s Troubleshooting section.
 - **Want tailnet devices to use Pi-hole for DNS too** (e.g. so a phone
   reaching AlexOS over Tailscale also gets ad-blocking)? Don't do that
   by leaving `--accept-dns` on here - add Pi-hole's Tailscale IP as a
