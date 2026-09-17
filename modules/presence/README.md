@@ -135,6 +135,13 @@ logged and never returned in bulk - only via the explicit `GET
   - `POST /devices/{id}/bluetooth` - `{ bluetoothAddress }`. Sets or
     clears the device's classic Bluetooth address for Bluetooth
     presence (see below); an empty/`null` value clears it.
+  - `POST /devices/{id}/presence-methods` - `{ locationEnabled,
+    bluetoothEnabled }`. Which configured signal(s) are actually
+    allowed to drive this device's home/away state - see "Unlock via
+    Location and/or Bluetooth" below. A pause, not a delete: turning
+    one off leaves its underlying setup (the token, the Bluetooth
+    address) untouched, so turning it back on needs no re-pairing or
+    re-configuring the phone.
   - `POST /pin` - set or change the PIN (the current PIN is required
     to change an existing one; not required to set the first one).
   - `POST /unlock` - `{ pin }`. Starts an unlock session that expires
@@ -210,8 +217,9 @@ presence" field in **Presence & away mode** settings.
 calls the same `record_event(..., "arrive")` the webhook uses, so
 `compute_status`/`GET /status` need no special case for it - if both a
 webhook/OwnTracks path *and* a Bluetooth address are configured for the
-same device, whichever reported most recently wins, same as any other
-tie between two update sources.
+same device (and both are enabled - see "Unlock via Location and/or
+Bluetooth" below), whichever reported most recently wins, same as any
+other tie between two update sources.
 
 **Hysteresis on the way out, not on the way in.** A device flips to
 "arrive" the moment a single ping succeeds, but only flips to "leave"
@@ -235,6 +243,48 @@ capability set). **Not verified against real hardware** - this needs a
 first real check on the owner's own Pi and phone, the same as
 `modules/control_center`'s Bluetooth speaker mode was before that
 verification happened.
+
+## Unlock via Location and/or Bluetooth
+
+Each device has two independent toggles in **Presence & away mode**
+settings - "Location (webhook / OwnTracks)" and "Bluetooth proximity" -
+controlling whether that signal is allowed to actually drive `home`/
+`away` for the device, on top of whatever's configured for it. Both
+default on, so a device with only one signal configured (say, just a
+Bluetooth address, no webhook ever called) behaves exactly as if the
+toggles didn't exist - they only matter once you want to deliberately
+stop trusting a signal you've already set up, without tearing that
+setup down.
+
+**A pause, not a delete.** Turning "Location" off for a device doesn't
+revoke its webhook token or touch its OwnTracks credentials - the phone
+can keep calling `/webhook`/`/owntracks` exactly as before, the calls
+just don't move `event`/`lastEventAt` anymore (still a normal 200/`[]`
+response either way, so the phone's automation never sees an error and
+never retries pointlessly). Same for "Bluetooth" and the stored
+`bluetoothAddress`. Flip it back on later and everything resumes
+immediately, no re-pairing, no re-entering the webhook URL into
+Shortcuts/Tasker/OwnTracks again.
+
+**Why this exists.** GPS-based geofencing and Bluetooth proximity fail
+in different, uncorrelated ways (see this README's troubleshooting
+section for GPS, `modules/control_center`'s Bluetooth README section
+for the adapter side) - an owner who's had one misbehave might want to
+temporarily trust only the other, without losing the misbehaving one's
+configuration while they debug it. It's also just useful as a
+deliberate choice: someone who finds Bluetooth's near-instant "arrive"
+more reliable day-to-day than their phone's geofencing might turn
+Location off entirely and keep Bluetooth as the only signal, or vice
+versa.
+
+**Turning both off for a device** doesn't error, but nothing can ever
+mark that device "arrive" again until at least one is back on - the
+Settings UI shows a warning right on the device when this happens, so
+it's never a silent trap. If that device happens to be the primary
+device, this has the same effect on `home`/`locked` as the device never
+reporting at all (see "Fails toward privacy" above) - deliberate, not
+a bug: a device with every signal disabled has no way left to prove
+someone's home.
 
 ## The `"personal"` manifest field
 
