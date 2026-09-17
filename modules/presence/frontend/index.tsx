@@ -10,6 +10,7 @@ import {
   CardLoading,
   Input,
   Button,
+  Toggle,
 } from "@alexos/ui";
 import { useEventBus, usePolling, type EventBusLike } from "@alexos/hooks";
 
@@ -30,6 +31,13 @@ interface PresenceDevice {
    * null if Bluetooth presence isn't configured for it - see the
    * module README's "Bluetooth presence" section. */
   bluetoothAddress: string | null;
+  /** Whether the webhook/OwnTracks path is allowed to drive this
+   * device's home/away state - a pause, not a delete, of whatever's
+   * configured (the device keeps its token either way). */
+  locationEnabled: boolean;
+  /** Same, for Bluetooth-presence polling - only matters once
+   * bluetoothAddress is actually set. */
+  bluetoothEnabled: boolean;
   createdAt?: string;
 }
 
@@ -156,6 +164,7 @@ function DeviceRow({
   onDelete,
   onSetPrimary,
   onSetBluetoothAddress,
+  onSetPresenceMethods,
   busy,
 }: {
   device: PresenceDevice;
@@ -167,6 +176,7 @@ function DeviceRow({
   onDelete: () => void;
   onSetPrimary: () => void;
   onSetBluetoothAddress: (address: string) => void;
+  onSetPresenceMethods: (methods: { locationEnabled: boolean; bluetoothEnabled: boolean }) => void;
   busy: boolean;
 }) {
   const [renaming, setRenaming] = useState(false);
@@ -273,6 +283,39 @@ function DeviceRow({
           "Share" enabled, and that you've crossed its boundary at least once since adding it.
         </p>
       ) : null}
+
+      <div className="flex flex-col gap-2">
+        <p className="text-caption font-semibold text-text-primary">Unlock via</p>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-caption text-text-secondary">Location (webhook / OwnTracks)</span>
+          <Toggle
+            checked={device.locationEnabled}
+            onCheckedChange={(checked) =>
+              onSetPresenceMethods({ locationEnabled: checked, bluetoothEnabled: device.bluetoothEnabled })
+            }
+            disabled={busy}
+            label={`Toggle location-based unlock for ${device.name}`}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-caption text-text-secondary">
+            Bluetooth proximity{device.bluetoothAddress ? "" : " (no address set yet)"}
+          </span>
+          <Toggle
+            checked={device.bluetoothEnabled}
+            onCheckedChange={(checked) =>
+              onSetPresenceMethods({ locationEnabled: device.locationEnabled, bluetoothEnabled: checked })
+            }
+            disabled={busy}
+            label={`Toggle Bluetooth-proximity unlock for ${device.name}`}
+          />
+        </div>
+        {!device.locationEnabled && !device.bluetoothEnabled ? (
+          <p className="text-caption text-warning">
+            Both are off - nothing can mark this device "arrive" until you turn at least one back on.
+          </p>
+        ) : null}
+      </div>
 
       <div className="flex flex-col gap-1">
         <p className="text-caption text-text-secondary">
@@ -454,6 +497,17 @@ export function PresenceSettings({ apiBaseUrl }: PresenceWidgetProps) {
       }),
     );
 
+  const setPresenceMethods = (
+    deviceId: string,
+    methods: { locationEnabled: boolean; bluetoothEnabled: boolean },
+  ) =>
+    runAction(() =>
+      fetchJson(`${apiBaseUrl}/api/v1/modules/presence/devices/${deviceId}/presence-methods`, {
+        method: "POST",
+        body: JSON.stringify(methods),
+      }),
+    );
+
   const lockNow = () => runAction(() => fetchJson(`${apiBaseUrl}/api/v1/modules/presence/lock`, { method: "POST" }));
 
   const submitPin = async () => {
@@ -527,6 +581,7 @@ export function PresenceSettings({ apiBaseUrl }: PresenceWidgetProps) {
                     onDelete={() => void remove(device.id)}
                     onSetPrimary={() => void setPrimary(device.id)}
                     onSetBluetoothAddress={(address) => void setBluetoothAddress(device.id, address)}
+                    onSetPresenceMethods={(methods) => void setPresenceMethods(device.id, methods)}
                     busy={busy}
                   />
                 ))}

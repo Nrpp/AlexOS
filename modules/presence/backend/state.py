@@ -65,6 +65,13 @@ async def create_device(storage: StorageManager, name: str) -> dict[str, Any]:
         "lastSeen": None,
         "lastEventAt": None,
         "bluetoothAddress": None,
+        # Which reported signal(s) are allowed to actually move this
+        # device's event/lastEventAt - both default on, so a freshly-
+        # added device behaves exactly like before this setting existed:
+        # whatever's configured (webhook/OwnTracks and/or a Bluetooth
+        # address) just works. See set_device_presence_methods.
+        "locationEnabled": True,
+        "bluetoothEnabled": True,
         "createdAt": _iso(_now()),
     }
     devices.append(device)
@@ -93,6 +100,29 @@ async def set_device_bluetooth_address(
     for device in devices:
         if device["id"] == device_id:
             device["bluetoothAddress"] = address
+            await _save_devices(storage, devices)
+            return device
+    return None
+
+
+async def set_device_presence_methods(
+    storage: StorageManager, device_id: str, *, location_enabled: bool, bluetooth_enabled: bool
+) -> dict[str, Any] | None:
+    """Which of this device's configured signal(s) are allowed to
+    actually drive home/away: the webhook/OwnTracks path
+    (`location_enabled`) and/or Bluetooth-presence polling
+    (`bluetooth_enabled`). Turning one off doesn't remove its
+    underlying setup (the device's token, or its bluetoothAddress) -
+    it's a pause, not a delete, so re-enabling it later needs no
+    re-pairing or re-configuring the phone's automation. Both default
+    True (see create_device) - disabling one only matters once the
+    corresponding signal is actually configured; a device with no
+    bluetoothAddress ignores `bluetooth_enabled` either way."""
+    devices = await list_devices(storage)
+    for device in devices:
+        if device["id"] == device_id:
+            device["locationEnabled"] = location_enabled
+            device["bluetoothEnabled"] = bluetooth_enabled
             await _save_devices(storage, devices)
             return device
     return None
@@ -267,6 +297,8 @@ async def compute_status(storage: StorageManager) -> dict[str, Any]:
                 "lastSeen": device.get("lastSeen"),
                 "lastEventAt": device.get("lastEventAt"),
                 "bluetoothAddress": device.get("bluetoothAddress"),
+                "locationEnabled": device.get("locationEnabled", True),
+                "bluetoothEnabled": device.get("bluetoothEnabled", True),
             }
             for device in devices
         ],

@@ -96,6 +96,8 @@ def test_created_device_starts_with_no_event() -> None:
     assert device["event"] is None
     assert device["lastSeen"] is None
     assert device["bluetoothAddress"] is None
+    assert device["locationEnabled"] is True
+    assert device["bluetoothEnabled"] is True
 
 
 def test_set_device_bluetooth_address() -> None:
@@ -126,6 +128,30 @@ def test_set_device_bluetooth_address_for_unknown_device_returns_none() -> None:
     async def scenario():
         storage = FakeStorageManager()
         return await state.set_device_bluetooth_address(storage, "does-not-exist", "AA:BB:CC:DD:EE:FF")
+
+    assert _run(scenario()) is None
+
+
+def test_set_device_presence_methods() -> None:
+    async def scenario():
+        storage = FakeStorageManager()
+        created = await state.create_device(storage, "Phone")
+        return await state.set_device_presence_methods(
+            storage, created["id"], location_enabled=False, bluetooth_enabled=True
+        )
+
+    updated = _run(scenario())
+    assert updated is not None
+    assert updated["locationEnabled"] is False
+    assert updated["bluetoothEnabled"] is True
+
+
+def test_set_device_presence_methods_for_unknown_device_returns_none() -> None:
+    async def scenario():
+        storage = FakeStorageManager()
+        return await state.set_device_presence_methods(
+            storage, "does-not-exist", location_enabled=False, bluetooth_enabled=False
+        )
 
     assert _run(scenario()) is None
 

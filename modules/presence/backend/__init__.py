@@ -49,9 +49,11 @@ async def _bluetooth_tick_forever(event_bus: EventBus, storage: StorageManager) 
 
 
 async def _bluetooth_tick_once(event_bus: EventBus, storage: StorageManager) -> None:
-    """Pings every device that has a Bluetooth address configured, one
-    at a time (Bluetooth is a single shared radio - see
-    bluetooth_presence.ping's docstring). A reachable device is marked
+    """Pings every device that has a Bluetooth address configured *and*
+    `bluetoothEnabled` (the "unlock via Bluetooth" toggle - see
+    set_device_presence_methods), one at a time (Bluetooth is a single
+    shared radio - see bluetooth_presence.ping's docstring). A reachable
+    device is marked
     "arrive" immediately (and its `lastSeen` refreshed even if it was
     already "arrive" - a successful ping is real proof of life). An
     unreachable one only flips to "leave" after
@@ -67,7 +69,7 @@ async def _bluetooth_tick_once(event_bus: EventBus, storage: StorageManager) -> 
     changed = False
     for device in devices:
         address = device.get("bluetoothAddress")
-        if not address:
+        if not address or not device.get("bluetoothEnabled", True):
             continue
         device_id = device["id"]
         previous_event = device.get("event")

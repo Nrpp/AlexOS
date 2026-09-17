@@ -131,6 +131,23 @@ def test_webhook_rejects_invalid_event_value_even_with_a_good_token() -> None:
     assert response.status_code == 400
 
 
+def test_webhook_is_a_no_op_while_location_is_disabled_for_the_device() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    client.post(
+        f"/devices/{device['id']}/presence-methods",
+        json={"locationEnabled": False, "bluetoothEnabled": True},
+    )
+
+    response = client.get(f"/webhook?device_id={device['id']}&event=arrive&token={device['token']}")
+    assert response.status_code == 200  # still a normal-looking 200 - see the route's own comment
+
+    status = client.get("/status").json()
+    updated = next(d for d in status["devices"] if d["id"] == device["id"])
+    assert updated["event"] is None
+    assert updated["lastSeen"] is None
+
+
 def test_webhook_rate_limits_repeated_bad_tokens() -> None:
     client = _make_client()
     device = _register_device(client)
@@ -196,6 +213,25 @@ def test_owntracks_transition_leave_marks_the_device_as_left() -> None:
     status = client.get("/status").json()
     updated = next(d for d in status["devices"] if d["id"] == device["id"])
     assert updated["event"] == "leave"
+
+
+def test_owntracks_transition_is_a_no_op_while_location_is_disabled() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    client.post(
+        f"/devices/{device['id']}/presence-methods",
+        json={"locationEnabled": False, "bluetoothEnabled": True},
+    )
+
+    response = client.post(
+        "/owntracks", json={"_type": "transition", "event": "enter"}, auth=(device["id"], device["token"])
+    )
+    assert response.status_code == 200
+    assert response.json() == []
+
+    status = client.get("/status").json()
+    updated = next(d for d in status["devices"] if d["id"] == device["id"])
+    assert updated["event"] is None
 
 
 def test_owntracks_plain_location_ping_updates_last_seen_but_not_event() -> None:
@@ -346,6 +382,40 @@ def test_setting_a_malformed_bluetooth_address_is_rejected() -> None:
 def test_setting_a_bluetooth_address_for_an_unknown_device_is_404() -> None:
     client = _make_client()
     response = client.post("/devices/does-not-exist/bluetooth", json={"bluetoothAddress": "AA:BB:CC:DD:EE:FF"})
+    assert response.status_code == 404
+
+
+def test_new_device_defaults_to_both_presence_methods_enabled() -> None:
+    client = _make_client()
+    device = _register_device(client)
+    listed = client.get("/devices").json()[0]
+    assert listed["locationEnabled"] is True
+    assert listed["bluetoothEnabled"] is True
+    assert device  # registered fine, just checked via the list above
+
+
+def test_setting_presence_methods() -> None:
+    client = _make_client()
+    device = _register_device(client)
+
+    response = client.post(
+        f"/devices/{device['id']}/presence-methods",
+        json={"locationEnabled": False, "bluetoothEnabled": True},
+    )
+    assert response.status_code == 200
+    assert response.json() == {"id": device["id"], "locationEnabled": False, "bluetoothEnabled": True}
+
+    listed = client.get("/devices").json()[0]
+    assert listed["locationEnabled"] is False
+    assert listed["bluetoothEnabled"] is True
+
+
+def test_setting_presence_methods_for_an_unknown_device_is_404() -> None:
+    client = _make_client()
+    response = client.post(
+        "/devices/does-not-exist/presence-methods",
+        json={"locationEnabled": True, "bluetoothEnabled": True},
+    )
     assert response.status_code == 404
 
 

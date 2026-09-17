@@ -102,6 +102,28 @@ def test_tick_ignores_devices_without_a_bluetooth_address(monkeypatch) -> None:
     _run(scenario())  # doesn't raise
 
 
+def test_tick_ignores_a_device_with_bluetooth_disabled_even_with_an_address_set(monkeypatch) -> None:
+    """The "unlock via Bluetooth" toggle pauses polling without clearing
+    the stored address - turning it back on later needs no re-pairing."""
+    monkeypatch.setattr(_backend, "bluetooth_is_available", lambda: True)
+
+    async def fake_ping(address, timeout_seconds=5.0):
+        raise AssertionError("ping() must not be called while bluetoothEnabled is False")
+
+    monkeypatch.setattr(_backend, "bluetooth_ping", fake_ping)
+
+    async def scenario():
+        storage = FakeStorageManager()
+        device = await state.create_device(storage, "Phone")
+        await state.set_device_bluetooth_address(storage, device["id"], "AA:BB:CC:DD:EE:FF")
+        await state.set_device_presence_methods(
+            storage, device["id"], location_enabled=True, bluetooth_enabled=False
+        )
+        await _backend._bluetooth_tick_once(FakeEventBus(), storage)
+
+    _run(scenario())  # doesn't raise
+
+
 def test_tick_marks_arrive_immediately_on_a_successful_ping(monkeypatch) -> None:
     monkeypatch.setattr(_backend, "bluetooth_is_available", lambda: True)
 

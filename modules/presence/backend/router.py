@@ -35,6 +35,7 @@ from .state import (
     record_event,
     rename_device,
     set_device_bluetooth_address,
+    set_device_presence_methods,
     set_pin,
     set_primary_device_id,
     touch_device,
@@ -101,8 +102,14 @@ async def webhook(
         raise HTTPException(status_code=400, detail="event must be 'arrive' or 'leave'.")
 
     reset_rate_limit(identity)
-    updated = await record_event(storage, device_id, event)
-    await _publish_status(request)
+    # Still 200s the phone's automation either way - "location presence is
+    # paused for this device" isn't the automation's problem, and treating
+    # it as a failure would just make Shortcuts/Tasker retry pointlessly.
+    if device.get("locationEnabled", True):
+        updated = await record_event(storage, device_id, event)
+        await _publish_status(request)
+    else:
+        updated = device
     return {"ok": True, "deviceId": device_id, "event": updated["event"] if updated else event}
 
 
@@ -152,13 +159,17 @@ async def owntracks_webhook(
         body = {}
     message_type = body.get("_type") if isinstance(body, dict) else None
 
-    if message_type == "transition":
-        mapped_event = _OWNTRACKS_TRANSITION_EVENTS.get(body.get("event"))
-        if mapped_event is not None:
-            await record_event(storage, device_id, mapped_event)
-            await _publish_status(request)
-    elif message_type == "location":
-        await touch_device(storage, device_id)
+    # Same "pause, don't error" reasoning as /webhook above - OwnTracks
+    # retries a publish it thinks failed, so this still returns the normal
+    # empty-array 200 either way, it just doesn't act on it.
+    if device.get("locationEnabled", True):
+        if message_type == "transition":
+            mapped_event = _OWNTRACKS_TRANSITION_EVENTS.get(body.get("event"))
+            if mapped_event is not None:
+                await record_event(storage, device_id, mapped_event)
+                await _publish_status(request)
+        elif message_type == "location":
+            await touch_device(storage, device_id)
 
     return []
 
@@ -195,6 +206,8 @@ async def get_devices(request: Request) -> list[dict]:
             "lastSeen": device.get("lastSeen"),
             "lastEventAt": device.get("lastEventAt"),
             "bluetoothAddress": device.get("bluetoothAddress"),
+            "locationEnabled": device.get("locationEnabled", True),
+            "bluetoothEnabled": device.get("bluetoothEnabled", True),
             "createdAt": device.get("createdAt"),
         }
         for device in devices
@@ -271,6 +284,30 @@ async def post_device_bluetooth(device_id: str, body: SetBluetoothAddressRequest
         )
     device = await set_device_bluetooth_address(storage, device_id, normalized)
     return {"id": device["id"], "bluetoothAddress": device.get("bluetoothAddress")}
+
+
+class SetPresenceMethodsRequest(BaseModel):
+    locationEnabled: bool
+    bluetoothEnabled: bool
+
+
+@router.post("/devices/{device_id}/presence-methods")
+async def post_device_presence_methods(device_id: str, body: SetPresenceMethodsRequest, request: Request) -> dict:
+    """Which configured signal(s) - webhook/OwnTracks and/or Bluetooth -
+    are allowed to actually drive this device's home/away state. See
+    set_device_presence_methods's docstring: this pauses a signal, it
+    doesn't delete its underlying setup."""
+    storage = request.app.state.storage_manager
+    device = await set_device_presence_methods(
+        storage, device_id, location_enabled=body.locationEnabled, bluetooth_enabled=body.bluetoothEnabled
+    )
+    if device is None:
+        raise HTTPException(status_code=404, detail="Device not found.")
+    return {
+        "id": device["id"],
+        "locationEnabled": device.get("locationEnabled", True),
+        "bluetoothEnabled": device.get("bluetoothEnabled", True),
+    }
 
 
 # --- PIN and lock/unlock ---------------------------------------------------
