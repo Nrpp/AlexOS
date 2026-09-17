@@ -88,10 +88,16 @@ docker compose -f docker/docker-compose.dev.yml up
 ### Production
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d
+docker compose --env-file .env -f docker/docker-compose.yml up -d
 ```
 
-One command. Nothing more.
+`--env-file .env` matters here (unlike the dev command above): production's
+`docker-compose.yml` reads `ALEXOS_WEB_PORT` from `.env` via Compose's own
+variable substitution (the API's CORS origin is derived from that same
+port, not read from `.env` separately), which - unlike the `env_file:` a
+service loads into its container - only looks in the compose file's own
+directory by default, not the repo root where `.env` actually lives. See
+docs/INSTALL_RPI5.md for the full setup.
 
 ### Raspberry Pi 5
 

@@ -2,13 +2,17 @@
 
 This is the target device for AlexOS: a Raspberry Pi 5 with the official
 Raspberry Pi Touch Display, running the production Docker stack so it
-survives reboots and updates with one command.
+survives reboots and updates with one command. Nothing here is actually
+Pi 5-specific, though - same Raspberry Pi OS, same Docker multi-arch
+images - a **Pi 4** works through these exact same steps too, just
+somewhat slower to build the Docker images the first time.
 
 ## What you need
 
-- Raspberry Pi 5 (4GB or 8GB)
+- Raspberry Pi 5 or 4 (4GB or 8GB)
 - Official Raspberry Pi Touch Display (or any HDMI display, for headless/dev use)
-- USB-C power supply rated for Pi 5 (5V/5A - official Pi 5 supply, or a PD supply that negotiates it)
+- USB-C power supply rated for your Pi model (5V/5A for a Pi 5 - official
+  supply, or a PD supply that negotiates it; a Pi 4 needs less)
 - A microSD card (32GB+) **or** an NVMe SSD on a PCIe HAT (recommended - AlexOS is meant to run all day, every day; an SSD is far more reliable long-term than an SD card)
 - Another computer to flash the OS, and a monitor/keyboard or SSH access to the Pi
 
@@ -63,30 +67,43 @@ cp .env.example .env
 ```
 
 Edit `.env` if you need to - the defaults work for accessing AlexOS from
-the Pi itself, on port 8080 (not 80 - see the Troubleshooting section's
+the Pi itself, on port 8090 (not 80 - see the Troubleshooting section's
 Pi-hole note if you're wondering why). If you'll reach it from other
-devices on your network too, set `ALEXOS_CORS_ORIGINS` to include
-however you'll address it, keeping the same port (e.g.
-`http://alexos.local:8080` alongside `http://localhost:8080`).
+devices on your network too by a *different* address than
+`http://localhost:8090` (e.g. `http://alexos.local:8090`), that one
+extra origin has to be added directly in
+`docker/docker-compose.yml`'s `ALEXOS_CORS_ORIGINS` line, comma-separated -
+not in `.env` (see that file's comment for why).
 
 ## 5. Run it
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 ```
 
 That's the whole production deployment - one command, as the project's
-Docker rule requires. First run takes a few minutes to build both
-images; after that, `up -d` is seconds.
+Docker rule requires (run from `~/AlexOS`, so `.env` and `docker/` are
+both right there). First run takes a few minutes to build both images;
+after that, `up -d` is seconds.
+
+`--env-file .env` matters: `docker-compose.yml`'s web port
+(`ALEXOS_WEB_PORT`) comes from `.env` via Compose's own variable
+substitution, which only looks in the compose file's own directory
+(`docker/`) by default, not the repo root - `--env-file .env` points
+it at the real one. Forgetting this flag doesn't error, it just
+silently falls back to the default (8090), so it's easy to miss if
+you're trying to override `ALEXOS_WEB_PORT`. (The API's CORS origin
+always tracks whatever port this resolves to, so there's no separate
+CORS setting to keep in sync for that part.)
 
 Check it's healthy:
 
 ```bash
-docker compose -f docker/docker-compose.yml ps
+docker compose --env-file .env -f docker/docker-compose.yml ps
 curl http://localhost:8000/api/v1/system/health
 ```
 
-Open `http://localhost:8080` (or `http://alexos.local:8080`) in a
+Open `http://localhost:8090` (or `http://alexos.local:8090`) in a
 browser - you should see the AlexOS shell: Status Bar, Home page, and
 the floating Dock.
 
@@ -110,11 +127,11 @@ browser chrome:
 
    ```ini
    [autostart]
-   autostart = chromium-browser --kiosk --noerrdialogs --disable-infobars --incognito http://localhost:8080
+   autostart = chromium-browser --kiosk --noerrdialogs --disable-infobars --incognito http://localhost:8090
    ```
 
    (For the X11-style `autostart` file, the line is
-   `@chromium-browser --kiosk --noerrdialogs --disable-infobars --incognito http://localhost:8080`
+   `@chromium-browser --kiosk --noerrdialogs --disable-infobars --incognito http://localhost:8090`
    instead of the `wayfire.ini` block above. Adjust the port if you
    changed `ALEXOS_WEB_PORT` in `.env`.)
 3. Disable screen blanking so the display never sleeps - in
@@ -127,21 +144,21 @@ browser chrome:
 ```bash
 cd ~/AlexOS
 git pull
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 ```
 
 ## Troubleshooting
 
 - **Running Pi-hole on the same Pi**: AlexOS's `web` service already
-  defaults to host port **8080**, not 80, specifically so it never
+  defaults to host port **8090**, not 80, specifically so it never
   collides with Pi-hole's own admin UI (which listens on 80) - no setup
   needed for this alone. If you need a *different* port still (e.g.
-  8080 itself is taken by something else too), set `ALEXOS_WEB_PORT` in
-  `.env` and update `ALEXOS_CORS_ORIGINS` to match the same port (see
-  the comments next to both in `.env.example`/`docker-compose.yml`).
-  Pi-hole and Tailscale can also conflict with each other over DNS -
-  see `modules/tailscale/README.md`'s Troubleshooting section for that
-  one, it's unrelated to this port.
+  8090 itself is taken by something else too), set `ALEXOS_WEB_PORT` in
+  `.env` and run with `--env-file .env` (step 5 above) - the API's CORS
+  origin automatically tracks whatever port that resolves to, no second
+  setting to keep in sync. Pi-hole and Tailscale can also conflict with
+  each other over DNS - see `modules/tailscale/README.md`'s
+  Troubleshooting section for that one, it's unrelated to this port.
 - **Port 8000 already in use**: the `api` service runs with
   `network_mode: host` (needed for the media module's Cast device
   discovery via mDNS, which doesn't cross Docker's bridge network), so
@@ -149,7 +166,7 @@ docker compose -f docker/docker-compose.yml up -d --build
   mapping left to remap. Free up port 8000, or change both the
   `--port 8000` in `apps/api/Dockerfile`'s `CMD` and
   `ALEXOS_API_PORT`/`VITE_API_BASE_URL` in `.env` to a different port.
-- **Containers won't start**: `docker compose -f docker/docker-compose.yml logs -f`
+- **Containers won't start**: `docker compose --env-file .env -f docker/docker-compose.yml logs -f`
   shows both services' output.
 - **Blank/black screen on the touch display but the API/web respond over
   the network**: it's almost always the kiosk autostart file - check
