@@ -62,7 +62,7 @@ services fighting over the same job:
   should resolve it too.
 - **Port 80** was a separate, unrelated collision some owners used to
   hit at the same time (Pi-hole's own web admin also listens there) -
-  AlexOS's `web` service now defaults to port 8080 instead specifically
+  AlexOS's `web` service now defaults to port 8090 instead specifically
   to avoid it, see `docs/INSTALL_RPI5.md`'s Troubleshooting section.
 - **Want tailnet devices to use Pi-hole for DNS too** (e.g. so a phone
   reaching AlexOS over Tailscale also gets ad-blocking)? Don't do that
