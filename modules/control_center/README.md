@@ -20,10 +20,12 @@ Bluetooth for the Raspberry Pi itself.
   every known device, each flagged `audioCapable` if it advertises the
   A2DP Audio Sink profile), `POST /bluetooth/speaker/mode`
   (`{enabled}` - toggles discoverable+pairable so a phone can find and
-  pair with the Pi as a speaker). **This widget only controls whether
-  new phones can find/pair with the Pi - it does not route any audio
-  by itself.** See "Bluetooth speaker" below for the one-time OS setup
-  that actually turns received audio into sound.
+  pair with the Pi as a speaker, **and** disconnects+blocks/unblocks
+  every already-paired audio-capable device - see `set_speaker_mode`'s
+  docstring for why plain discoverable/pairable alone doesn't stop a
+  previously-paired phone reconnecting on its own). Doesn't route any
+  audio by itself, on or off - see "Bluetooth speaker" below for the
+  one-time OS setup that actually turns received audio into sound.
 
 All three widgets render in Settings
 (`apps/web/src/pages/Settings/index.tsx`), not on their own Dock page -
@@ -68,6 +70,19 @@ other Bluetooth speaker. Two separate halves:
    mounted into the `api` container, deliberately - see "Real host
    control" above for why this module already keeps its host-privilege
    surface as narrow as it can). This is the part below.
+
+**Turning the toggle off actually stops your phone from reconnecting.**
+An earlier version of this toggle only stopped *new* pairings
+(discoverable/pairable off) - a phone paired before then kept
+reconnecting and playing audio through the Pi on its own the next time
+it came into range, toggle off or not, since BlueZ lets an already-
+trusted, bonded device resume A2DP without any prompt. Confirmed as a
+real problem on the owner's own hardware. `set_speaker_mode` now also
+disconnects and *blocks* every already-paired audio-capable device
+when you turn this off (and unblocks them again when you turn it back
+on) - see its docstring in `backend/bluetooth.py` for the full
+reasoning. A paired keyboard or other non-audio accessory is
+untouched either way.
 
 **Not verified on real hardware** - written from Raspberry Pi OS's
 current (Bookworm) documented approach, PipeWire replacing PulseAudio

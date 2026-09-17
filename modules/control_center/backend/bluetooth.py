@@ -145,16 +145,26 @@ async def remove(address: str) -> tuple[bool, str]:
     return returncode == 0, (stdout or stderr).strip()
 
 
+async def disconnect(address: str) -> tuple[bool, str]:
+    if not is_available():
+        return False, "bluetoothctl isn't available."
+    returncode, stdout, stderr = await _run("bluetoothctl", "disconnect", address)
+    return returncode == 0, (stdout or stderr).strip()
+
+
 # --- "Bluetooth speaker" mode: adapter power/discoverable/pairable ---------
 #
-# This only controls whether *new* devices can find and pair with the Pi -
-# it does NOT route audio anywhere by itself. Actually turning received
-# A2DP audio into sound needs a one-time OS-level setup on the Pi itself
-# (PipeWire/WirePlumber + the Bluetooth audio module, outside anything a
-# containerized API can configure) - see modules/control_center/README.md's
-# "Bluetooth speaker" section for that part. What's here just makes the Pi
-# discoverable/pairable so a phone can find and connect to it in the first
-# place, using the same bluetoothctl this file already uses for scan/pair.
+# Controls whether *new* devices can find and pair with the Pi
+# (discoverable/pairable), and whether *already-paired* audio-capable
+# ones are allowed to reconnect at all (block/unblock - see
+# set_speaker_mode's docstring for why plain discoverable/pairable
+# alone isn't enough to stop a previously-paired phone reconnecting on
+# its own). This does NOT route audio anywhere by itself - actually
+# turning received A2DP audio into sound needs a one-time OS-level
+# setup on the Pi itself (PipeWire/WirePlumber + the Bluetooth audio
+# module, outside anything a containerized API can configure) - see
+# modules/control_center/README.md's "Bluetooth speaker" section for
+# that part.
 
 
 def parse_adapter_state(output: str) -> dict[str, bool]:
@@ -180,14 +190,31 @@ async def get_adapter_state() -> dict[str, bool] | None:
 
 
 async def set_speaker_mode(enabled: bool) -> tuple[bool, str]:
-    """Turning it on: powers the adapter on (if it wasn't already) and
-    makes it discoverable and pairable, so a phone can find and connect
-    to it as a speaker. Turning it off only stops NEW pairings
-    (discoverable/pairable off) - it deliberately leaves the adapter
-    powered and any already-trusted device able to reconnect on its
-    own, since "stop advertising to new phones" and "disconnect the one
-    already playing music" are different actions and conflating them
-    would be surprising.
+    """Turning it on: powers the adapter on (if it wasn't already),
+    makes it discoverable and pairable so a *new* phone can find and
+    connect to it as a speaker, and unblocks every already-paired
+    audio-capable device (see below) so they can reconnect on their own
+    again.
+
+    Turning it off does the opposite of all three: stops new pairings
+    (discoverable/pairable off), and - confirmed as a real problem on
+    the owner's own hardware - actively disconnects and *blocks*
+    (`bluetoothctl block`, not just untrust) every already-paired
+    audio-capable device, not just the discoverable/pairable flags.
+    Without this, a previously-paired phone reconnects and starts
+    playing through the Pi on its own the next time it's in range,
+    entirely regardless of this toggle - BlueZ's "Trusted" flag (set
+    during the original pairing) lets a phone silently resume its A2DP
+    connection using the existing bond, no authorization prompt
+    involved, so leaving the adapter merely non-discoverable was never
+    actually enough to stop it. `block` is what makes BlueZ refuse the
+    connection outright while this is off; `unblock` on the way back
+    in lets it resume exactly as before, no re-pairing needed. Not
+    scoped by *connected* state (a phone that's currently out of range
+    still needs blocking so it can't reconnect the moment it comes back),
+    and deliberately scoped to `audio_capable` devices only - a paired
+    keyboard or mouse has nothing to do with "speaker mode" and
+    shouldn't lose its own ability to reconnect because of this toggle.
 
     Success/failure is decided from the adapter's actual resulting
     state (a fresh `bluetoothctl show`), not from each individual
@@ -207,6 +234,14 @@ async def set_speaker_mode(enabled: bool) -> tuple[bool, str]:
     else:
         await _run("bluetoothctl", "pairable", "off")
         await _run("bluetoothctl", "discoverable", "off")
+
+    for device in await list_devices() or []:
+        if device.paired and device.audio_capable:
+            if enabled:
+                await _run("bluetoothctl", "unblock", device.address)
+            else:
+                await _run("bluetoothctl", "disconnect", device.address)
+                await _run("bluetoothctl", "block", device.address)
 
     state = await get_adapter_state()
     if state is None:

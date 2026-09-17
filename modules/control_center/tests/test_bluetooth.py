@@ -160,3 +160,86 @@ def test_set_speaker_mode_reports_unavailable_bluetoothctl(monkeypatch) -> None:
     ok, message = _run(bluetooth.set_speaker_mode(True))
     assert ok is False
     assert "isn't available" in message
+
+
+# --- set_speaker_mode: disconnecting/(un)blocking already-paired devices ---
+# Regression tests for a real problem confirmed on the owner's own hardware:
+# leaving discoverable/pairable off was never enough to stop an
+# already-paired phone reconnecting and auto-playing audio through the Pi
+# on its own - BlueZ lets a Trusted, bonded device reconnect A2DP without
+# any authorization prompt, discoverable/pairable or not. `block`/`unblock`
+# (not just discoverable/pairable, and not `trust`/`untrust` either, which
+# wouldn't reliably stop it) is what actually prevents/allows reconnection.
+
+_PHONE_ADDRESS = "AA:BB:CC:DD:EE:01"
+_KEYBOARD_ADDRESS = "AA:BB:CC:DD:EE:02"
+
+_DEVICES_OUTPUT = f"Device {_PHONE_ADDRESS} My Phone\nDevice {_KEYBOARD_ADDRESS} A Keyboard\n"
+
+_PHONE_INFO = (
+    f"Device {_PHONE_ADDRESS} (public)\n"
+    "\tPaired: yes\n"
+    "\tConnected: yes\n"
+    "\tUUID: Audio Sink               (0000110b-0000-1000-8000-00805f9b34fb)\n"
+)
+_KEYBOARD_INFO = (
+    f"Device {_KEYBOARD_ADDRESS} (public)\n"
+    "\tPaired: yes\n"
+    "\tConnected: yes\n"
+    "\tUUID: Human Interface Device    (00001124-0000-1000-8000-00805f9b34fb)\n"
+)
+
+
+def _fake_run_with_paired_devices(show_output: str):
+    calls: list[tuple[str, ...]] = []
+
+    async def fake_run(*args, **kwargs):
+        calls.append(args)
+        if args[:2] == ("bluetoothctl", "devices"):
+            return 0, _DEVICES_OUTPUT, ""
+        if args[:2] == ("bluetoothctl", "info"):
+            address = args[2]
+            return 0, _PHONE_INFO if address == _PHONE_ADDRESS else _KEYBOARD_INFO, ""
+        if args[:2] == ("bluetoothctl", "show"):
+            return 0, show_output, ""
+        return 0, "", ""
+
+    return fake_run, calls
+
+
+def test_set_speaker_mode_disable_disconnects_and_blocks_the_paired_audio_device(monkeypatch) -> None:
+    fake_run, calls = _fake_run_with_paired_devices(_SHOW_ALL_OFF)
+    monkeypatch.setattr(bluetooth, "is_available", lambda: True)
+    monkeypatch.setattr(bluetooth, "_run", fake_run)
+
+    ok, _message = _run(bluetooth.set_speaker_mode(False))
+
+    assert ok is True
+    assert ("bluetoothctl", "disconnect", _PHONE_ADDRESS) in calls
+    assert ("bluetoothctl", "block", _PHONE_ADDRESS) in calls
+
+
+def test_set_speaker_mode_disable_does_not_touch_a_non_audio_paired_device(monkeypatch) -> None:
+    """A paired keyboard has nothing to do with "speaker mode" - it
+    must keep being able to reconnect on its own."""
+    fake_run, calls = _fake_run_with_paired_devices(_SHOW_ALL_OFF)
+    monkeypatch.setattr(bluetooth, "is_available", lambda: True)
+    monkeypatch.setattr(bluetooth, "_run", fake_run)
+
+    _run(bluetooth.set_speaker_mode(False))
+
+    assert ("bluetoothctl", "disconnect", _KEYBOARD_ADDRESS) not in calls
+    assert ("bluetoothctl", "block", _KEYBOARD_ADDRESS) not in calls
+
+
+def test_set_speaker_mode_enable_unblocks_the_paired_audio_device(monkeypatch) -> None:
+    fake_run, calls = _fake_run_with_paired_devices(_SHOW_ALL_ON)
+    monkeypatch.setattr(bluetooth, "is_available", lambda: True)
+    monkeypatch.setattr(bluetooth, "_run", fake_run)
+
+    ok, _message = _run(bluetooth.set_speaker_mode(True))
+
+    assert ok is True
+    assert ("bluetoothctl", "unblock", _PHONE_ADDRESS) in calls
+    assert ("bluetoothctl", "disconnect", _PHONE_ADDRESS) not in calls
+    assert ("bluetoothctl", "block", _PHONE_ADDRESS) not in calls
