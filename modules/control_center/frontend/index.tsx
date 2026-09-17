@@ -450,8 +450,8 @@ export function BluetoothSpeakerWidget({ apiBaseUrl }: ControlCenterWidgetProps)
               <span>Discoverable as a speaker</span>
               <p className="text-caption text-text-secondary">
                 {status.discoverable && status.pairable
-                  ? "Any nearby phone can find and pair now."
-                  : "Off - existing paired devices can still reconnect on their own."}
+                  ? "Any nearby phone can find, pair, and reconnect now."
+                  : "Off - new phones can't pair, and already-paired ones can't reconnect either."}
               </p>
             </div>
             <Toggle
