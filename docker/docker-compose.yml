@@ -10,7 +10,11 @@ services:
     env_file:
       - ../.env
     environment:
-      ALEXOS_CORS_ORIGINS: ${ALEXOS_CORS_ORIGINS:-http://localhost}
+      # Default kept in sync with the `web` service's own default port
+      # below (ALEXOS_WEB_PORT, 8080) - if you change one, change the
+      # other, or the browser's actual origin won't match what's allowed
+      # here and every API call will be blocked by CORS.
+      ALEXOS_CORS_ORIGINS: ${ALEXOS_CORS_ORIGINS:-http://localhost:8080}
       # Forced here, not just left to the Dockerfile's ENV: `env_file`
       # values (../.env, above) override a Dockerfile's ENV for the same
       # key, and .env.example used to ship ALEXOS_DATABASE_URL pointing
@@ -73,7 +77,12 @@ services:
       context: ..
       dockerfile: apps/web/Dockerfile
     ports:
-      - "80:80"
+      # 8080 by default, not 80 - so a fresh install never collides with
+      # Pi-hole's admin UI (which listens on 80) if you run both on the
+      # same Pi. Override ALEXOS_WEB_PORT in .env to use a different
+      # host port (keep ALEXOS_CORS_ORIGINS above in sync if you do -
+      # they both have to agree on the browser's actual origin).
+      - "${ALEXOS_WEB_PORT:-8080}:80"
     depends_on:
       - api
     restart: unless-stopped

@@ -63,9 +63,11 @@ cp .env.example .env
 ```
 
 Edit `.env` if you need to - the defaults work for accessing AlexOS from
-the Pi itself. If you'll reach it from other devices on your network too,
-set `ALEXOS_CORS_ORIGINS` to include however you'll address it (e.g.
-`http://alexos.local` alongside `http://localhost`).
+the Pi itself, on port 8080 (not 80 - see the Troubleshooting section's
+Pi-hole note if you're wondering why). If you'll reach it from other
+devices on your network too, set `ALEXOS_CORS_ORIGINS` to include
+however you'll address it, keeping the same port (e.g.
+`http://alexos.local:8080` alongside `http://localhost:8080`).
 
 ## 5. Run it
 
@@ -84,8 +86,9 @@ docker compose -f docker/docker-compose.yml ps
 curl http://localhost:8000/api/v1/system/health
 ```
 
-Open `http://localhost` (or `http://alexos.local`) in a browser - you
-should see the AlexOS shell: Status Bar, Home page, and the floating Dock.
+Open `http://localhost:8080` (or `http://alexos.local:8080`) in a
+browser - you should see the AlexOS shell: Status Bar, Home page, and
+the floating Dock.
 
 Both services already have `restart: unless-stopped`, so they come back
 on their own after a reboot or a crash - you don't need to re-run this
@@ -107,12 +110,13 @@ browser chrome:
 
    ```ini
    [autostart]
-   autostart = chromium-browser --kiosk --noerrdialogs --disable-infobars --incognito http://localhost
+   autostart = chromium-browser --kiosk --noerrdialogs --disable-infobars --incognito http://localhost:8080
    ```
 
    (For the X11-style `autostart` file, the line is
-   `@chromium-browser --kiosk --noerrdialogs --disable-infobars --incognito http://localhost`
-   instead of the `wayfire.ini` block above.)
+   `@chromium-browser --kiosk --noerrdialogs --disable-infobars --incognito http://localhost:8080`
+   instead of the `wayfire.ini` block above. Adjust the port if you
+   changed `ALEXOS_WEB_PORT` in `.env`.)
 3. Disable screen blanking so the display never sleeps - in
    **Raspberry Pi Configuration → Display**, turn off "Screen Blanking".
 4. Reboot. The Pi should come up straight into AlexOS, full-screen, ready
@@ -128,11 +132,16 @@ docker compose -f docker/docker-compose.yml up -d --build
 
 ## Troubleshooting
 
-- **Port 80 already in use** (e.g. you're also running Pi-hole, which
-  spec'd to appear inside AlexOS's Servers page later, listens there
-  too): change the `web` service's port mapping in
-  `docker/docker-compose.yml` from `"80:80"` to something like
-  `"8080:80"`, then visit `http://localhost:8080`.
+- **Running Pi-hole on the same Pi**: AlexOS's `web` service already
+  defaults to host port **8080**, not 80, specifically so it never
+  collides with Pi-hole's own admin UI (which listens on 80) - no setup
+  needed for this alone. If you need a *different* port still (e.g.
+  8080 itself is taken by something else too), set `ALEXOS_WEB_PORT` in
+  `.env` and update `ALEXOS_CORS_ORIGINS` to match the same port (see
+  the comments next to both in `.env.example`/`docker-compose.yml`).
+  Pi-hole and Tailscale can also conflict with each other over DNS -
+  see `modules/tailscale/README.md`'s Troubleshooting section for that
+  one, it's unrelated to this port.
 - **Port 8000 already in use**: the `api` service runs with
   `network_mode: host` (needed for the media module's Cast device
   discovery via mDNS, which doesn't cross Docker's bridge network), so
