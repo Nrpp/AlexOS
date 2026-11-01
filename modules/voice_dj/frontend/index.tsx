@@ -55,11 +55,12 @@ export default function VoiceDJWidget({ eventBus, apiBaseUrl }: VoiceDJWidgetPro
 
   const send = async (action: "play" | "stop") => {
     if (!apiBaseUrl) return;
-    const response = await fetch(`${apiBaseUrl}/api/v1/modules/voice_dj/${action}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: action === "play" ? JSON.stringify({ action: "play" }) : undefined,
-    });
+    const init: RequestInit = { method: "POST" };
+    if (action === "play") {
+      init.headers = { "Content-Type": "application/json" };
+      init.body = JSON.stringify({ action: "play" });
+    }
+    const response = await fetch(`${apiBaseUrl}/api/v1/modules/voice_dj/${action}`, init);
     if (response.ok) setState(await response.json());
   };
 
