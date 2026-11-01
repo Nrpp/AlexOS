@@ -33,7 +33,8 @@
     "spotifyPlaylistUrl": "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
     "radioStreamUrl": "https://stream.radioparadise.com/mp3-128",
     "radioName": "Radio Paradise",
-    "volumePercent": 55
+    "volumePercent": null,
+    "_volumePercent_help": "null = do not touch the volume; keep whatever the speaker/Pi is currently set to. Set a number 0-100 to pin that level on each play (e.g. to stop BlueZ blasting to 100% on connect)."
   },
   "agent": {
     "apiBaseUrl": "http://localhost:8000",

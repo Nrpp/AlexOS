@@ -105,7 +105,8 @@ Spotify instead (`"source": "spotify"` in `config.json`):
     "source": "radio",                 // "radio" | "spotify"
     "spotifyPlaylistUrl": "https://open.spotify.com/playlist/...",
     "radioStreamUrl": "https://stream.radioparadise.com/mp3-128",
-    "radioName": "Radio Paradise"
+    "radioName": "Radio Paradise",
+    "volumePercent": null               // null = leave the speaker's own volume alone; 0-100 to pin it on each play
   },
   "agent": { "apiBaseUrl": "http://localhost:8000", "heartbeatSeconds": 5, "commandPollSeconds": 2 }
 }
