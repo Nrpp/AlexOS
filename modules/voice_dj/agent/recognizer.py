@@ -54,13 +54,23 @@ class Recognizer:
         words.add("[unk]")
         return json.dumps(sorted(words))
 
-    def load(self) -> None:
+    def load(self, use_grammar: bool = False) -> None:
         from vosk import KaldiRecognizer, Model  # imported lazily so the
 
         # rest of the agent runs even if Vosk isn't installed yet.
         self._model = Model(self.model_path)
-        self._recognizer = KaldiRecognizer(self._model, SAMPLE_RATE, self._grammar())
-        log.info("Vosk model loaded from %s", self.model_path)
+        # Free recognition by default: a strict grammar outputs nothing
+        # when the speech doesn't exactly match an allowed word, so it
+        # silently drops natural phrasing ("oye alex, ponme musica
+        # porfa"). We instead let Vosk transcribe freely and do our own
+        # wake-word + phrase substring match in intent_from_text, which
+        # is far more forgiving. `use_grammar=True` restores the tight
+        # grammar if ever wanted.
+        if use_grammar:
+            self._recognizer = KaldiRecognizer(self._model, SAMPLE_RATE, self._grammar())
+        else:
+            self._recognizer = KaldiRecognizer(self._model, SAMPLE_RATE)
+        log.info("Vosk model loaded from %s (grammar=%s)", self.model_path, use_grammar)
 
     def _capture_cmd(self, source: str | None) -> list[str] | None:
         if shutil.which("parecord"):

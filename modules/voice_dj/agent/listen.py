@@ -100,6 +100,11 @@ class Agent:
         self.address = speaker.get("address") or None
         self.name_match = speaker.get("nameMatch", "sound flow")
 
+        # Optional external mic (e.g. a USB mic). When set we listen on it
+        # directly and never touch the speaker's HFP profile - so there's
+        # no A2DP<->HFP conflict and we can hear "para" even while playing.
+        self.mic_source = self.config.get("voice", {}).get("micSource") or None
+
         self.recognizer: Recognizer | None = None
         self.voice_detail = ""
         self._init_recognizer()
@@ -157,7 +162,10 @@ class Agent:
 
     def start_playing(self, source: str | None, spoken_text: str = "") -> None:
         source = source or self.default_source
-        if self.recognizer:
+        # With an external mic there's no profile conflict, so keep
+        # capturing while we play. Only the speaker-HFP path has to stop
+        # listening to free the link for A2DP.
+        if self.recognizer and not self.mic_source:
             self.recognizer.stop_capture()
         if self.address and not use_music_profile(self.address)[0]:
             log.warning("couldn't switch speaker to A2DP; trying to play anyway")
@@ -209,6 +217,10 @@ class Agent:
             elif cmd.get("action") == "stop":
                 self.stop_playing()
 
+        if self.mic_source:
+            self._loop_external_mic(connected)
+            return
+
         if self.mode == "playing":
             # Hardware can't give us the mic while playing hi-fi, so we
             # don't listen here - we just watch the player and wait for a
@@ -248,6 +260,33 @@ class Agent:
             log.info("heard: %r -> %s", text, intent)
             self.api.heartbeat(lastHeard=text, mode=self.mode, speakerConnected=connected)
         if intent == "play":
+            self.start_playing(None, text)
+        elif intent == "stop":
+            self.stop_playing(text)
+
+    def _loop_external_mic(self, connected: bool) -> None:
+        """External-mic mode: no A2DP<->HFP juggling. We keep the speaker
+        on A2DP for output and listen on the configured mic the whole
+        time, so "Alex, pon musica" AND "Alex, para" both work even while
+        music is playing."""
+        if self.mode == "playing" and not self.player.is_playing:
+            self.stop_playing()  # stream ended on its own
+        if self.mode == "playing":
+            self.player.nudge_play()
+        if not self.recognizer:
+            time.sleep(self.command_poll_s)  # UI-only mode
+            return
+        if self.recognizer._capture is None:
+            if not self.recognizer.start_capture(self.mic_source):
+                self.voice_detail = "no pude capturar del microfono"
+                time.sleep(3)
+                return
+            self.voice_detail = ""
+        text, intent = self.recognizer.listen_once()
+        if text:
+            log.info("heard: %r -> %s", text, intent)
+            self.api.heartbeat(lastHeard=text, mode=self.mode, speakerConnected=connected)
+        if intent == "play" and self.mode != "playing":
             self.start_playing(None, text)
         elif intent == "stop":
             self.stop_playing(text)

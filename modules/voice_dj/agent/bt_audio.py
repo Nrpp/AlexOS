@@ -79,13 +79,23 @@ def ensure_connected(address: str, attempts: int = 3) -> bool:
 # --- pactl: card profiles, sinks, sources ---------------------------------
 
 
+def _mac_matches(address: str, node_name: str) -> bool:
+    """A BT device's MAC shows up in PipeWire node names inconsistently:
+    the sink/card use underscores (bluez_output.EC_ED_..._CC) while the
+    HFP source can use colons (bluez_input.EC:ED:...:CC). Match any form,
+    case-insensitively, so we find the mic as reliably as the speaker."""
+    upper = address.upper()
+    forms = {upper, upper.replace(":", "_"), upper.replace(":", "")}
+    name = node_name.upper()
+    return any(form in name for form in forms)
+
+
 def _card_name(address: str) -> str | None:
     """PipeWire names a BT card `bluez_card.AA_BB_CC_DD_EE_FF`."""
-    mac = address.upper().replace(":", "_")
     rc, out, _ = _run(["pactl", "list", "cards", "short"])
     for line in out.splitlines():
         fields = line.split("\t")
-        if len(fields) >= 2 and mac in fields[1].upper():
+        if len(fields) >= 2 and _mac_matches(address, fields[1]):
             return fields[1]
     return None
 
@@ -152,11 +162,10 @@ def _set_profile(card: str, profile: str) -> bool:
 def _node_for(address: str, kind: str) -> str | None:
     """`kind` is "sinks" or "sources". Returns the bluez node name for
     this device, e.g. bluez_output.AA_BB_... / bluez_input.AA_BB_..."""
-    mac = address.upper().replace(":", "_")
     rc, out, _ = _run(["pactl", "list", kind, "short"])
     for line in out.splitlines():
         fields = line.split("\t")
-        if len(fields) >= 2 and mac in fields[1].upper():
+        if len(fields) >= 2 and _mac_matches(address, fields[1]):
             return fields[1]
     return None
 
