@@ -1,0 +1,22 @@
+{
+  "speaker": {
+    "address": "",
+    "nameMatch": "sound flow"
+  },
+  "wakeWord": "alex",
+  "commands": {
+    "play": ["pon musica", "pon música", "pon la musica", "reproduce musica", "pon algo de musica", "quiero musica"],
+    "stop": ["para", "para la musica", "detente", "silencio", "stop", "apaga la musica"]
+  },
+  "music": {
+    "source": "radio",
+    "spotifyPlaylistUrl": "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+    "radioStreamUrl": "https://stream.radioparadise.com/mp3-128",
+    "radioName": "Radio Paradise"
+  },
+  "agent": {
+    "apiBaseUrl": "http://localhost:8000",
+    "heartbeatSeconds": 5,
+    "commandPollSeconds": 2
+  }
+}
