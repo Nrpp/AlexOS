@@ -1,0 +1,44 @@
+{
+  "speaker": {
+    "address": "EC:ED:73:FA:4A:CC",
+    "nameMatch": "sound flow"
+  },
+  "wakeWord": "alex",
+  "voice": {
+    "micSource": "",
+    "_micSource_help": "PipeWire source to listen on. Empty = use the speaker's own Bluetooth HFP mic (switches the speaker to HFP to listen, then back to A2DP to play). On a Raspberry Pi the onboard-BT HFP mic is often silent, so set this to a USB mic's source name (see `pactl list sources short`) - that also lets it listen WHILE music plays, since there's no A2DP/HFP conflict."
+  },
+  "commands": {
+    "play": [
+      "pon musica",
+      "pon la musica",
+      "reproduce musica",
+      "pon algo de musica",
+      "quiero musica",
+      "musica",
+      "cancion",
+      "play"
+    ],
+    "stop": [
+      "para",
+      "para la musica",
+      "detente",
+      "silencio",
+      "stop",
+      "apaga la musica"
+    ]
+  },
+  "music": {
+    "source": "spotify",
+    "spotifyPlaylistUrl": "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+    "radioStreamUrl": "https://stream.radioparadise.com/mp3-128",
+    "radioName": "Radio Paradise",
+    "volumePercent": null,
+    "_volumePercent_help": "null = do not touch the volume; keep whatever the speaker/Pi is currently set to. Set a number 0-100 to pin that level on each play (e.g. to stop BlueZ blasting to 100% on connect)."
+  },
+  "agent": {
+    "apiBaseUrl": "http://localhost:8000",
+    "heartbeatSeconds": 5,
+    "commandPollSeconds": 2
+  }
+}

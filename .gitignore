@@ -48,3 +48,7 @@ coverage/
 
 # Vite
 .vite/
+
+# modules/voice_dj: the Vosk model is downloaded by agent/install.sh, not committed
+modules/voice_dj/agent/models/
+modules/voice_dj/agent/.venv/

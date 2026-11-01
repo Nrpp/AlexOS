@@ -1,0 +1,6 @@
+# Host-agent dependencies. Deliberately tiny so it installs cleanly on a
+# Pi 4: Vosk ships prebuilt aarch64 wheels, and everything else the agent
+# needs (HTTP to the AlexOS API, audio capture, playback) is done with
+# the Python stdlib + system tools (parecord/pw-record, cvlc/ffplay,
+# chromium, bluetoothctl, pactl) rather than more Python packages.
+vosk>=0.3.45

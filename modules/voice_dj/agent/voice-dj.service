@@ -1,0 +1,34 @@
+# Reference systemd --user unit for the voice_dj host agent.
+# install.sh generates the real one (with absolute paths for your
+# checkout) into ~/.config/systemd/user/voice-dj.service - you normally
+# don't edit this file by hand. Kept here so the unit is visible in the
+# repo and so a manual install is possible.
+#
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now voice-dj
+#   journalctl --user -u voice-dj -f
+#
+# It's a --user service (not system-wide) so it inherits the desktop
+# session's PipeWire socket and Wayland/X11 display - needed for the mic,
+# the speaker audio, and Chromium (Spotify).
+
+[Unit]
+Description=AlexOS voice_dj agent (wake word + music on the Bluetooth speaker)
+After=pipewire.service wireplumber.service bluetooth.target graphical-session.target
+Wants=pipewire.service wireplumber.service
+
+[Service]
+Type=simple
+# A --user service gets a minimal PATH that can miss where pactl /
+# parecord / cvlc / chromium live (e.g. a Homebrew prefix), which
+# silently breaks audio while bluetoothctl still works. install.sh bakes
+# your real PATH in here for you; if you write this unit by hand, set it:
+#   Environment=PATH=/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin
+# %h = the user's home. Adjust if your AlexOS checkout isn't ~/AlexOS
+# (install.sh writes the resolved path for you).
+ExecStart=%h/AlexOS/modules/voice_dj/agent/.venv/bin/python %h/AlexOS/modules/voice_dj/agent/listen.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
