@@ -83,10 +83,13 @@ Spotify instead (`"source": "spotify"` in `config.json`):
   ```
   Log in, then close it. The login sticks in that profile.
 - Set `music.spotifyPlaylistUrl` to a playlist. On "pon música" the agent
-  opens it and tries to press play (space). Free-tier limits apply
-  (shuffle, ads), and you may need to tap play once on the touch screen
-  the first time. Radio is the dependable fallback — if Spotify can't
-  start, the agent falls back to radio automatically.
+  opens it in Chromium (under X11, `--ozone-platform=x11`) and auto-presses
+  play, retrying until audio actually starts. This needs **`xdotool`**
+  (`sudo apt install -y xdotool`) to focus the player and send the play
+  key; without it (or on a pure-Wayland session it can't drive), just tap
+  play once on the touch screen. Free-tier limits apply (shuffle, ads).
+  Radio is the dependable fallback — if Spotify can't start, the agent
+  falls back to radio automatically.
 
 ## config.json
 
