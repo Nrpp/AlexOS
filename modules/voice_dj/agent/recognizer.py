@@ -118,11 +118,15 @@ class Recognizer:
                     return intent
         return None
 
-    def listen_once(self, timeout_chunks: int = 250) -> tuple[str, str | None]:
-        """Reads mic audio until Vosk returns a final result, then maps
-        it to an intent. Returns (transcript, intent|None). Blocks; call
-        it from the agent's listen loop. `timeout_chunks` bounds how long
-        one utterance window waits so the loop can breathe."""
+    def listen_once(self, timeout_chunks: int = 32) -> tuple[str, str | None]:
+        """Reads mic audio for a short window and returns as soon as Vosk
+        finalises an utterance (on end-of-speech). Returns (transcript,
+        intent|None). If the window passes with no completed utterance it
+        returns ("", None) WITHOUT flushing - the recogniser keeps its
+        partial state, so a phrase spoken across a window boundary isn't
+        cut. The short window (~4s at 4000-byte/0.125s chunks) is what
+        lets the agent's loop poll UI commands and heartbeat promptly
+        between utterances instead of blocking on the mic."""
         if self._capture is None or self._capture.stdout is None:
             return "", None
         for _ in range(timeout_chunks):
@@ -133,6 +137,4 @@ class Recognizer:
                 text = json.loads(self._recognizer.Result()).get("text", "")
                 if text:
                     return text, self.intent_from_text(text)
-        # Flush whatever partial we have at the window's end.
-        text = json.loads(self._recognizer.FinalResult()).get("text", "")
-        return text, self.intent_from_text(text) if text else None
+        return "", None

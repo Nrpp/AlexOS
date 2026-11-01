@@ -139,17 +139,24 @@ class Agent:
 
     # --- heartbeat / commands --------------------------------------------
 
+    def _push_heartbeat(self, connected: bool | None = None) -> None:
+        if connected is None:
+            connected = bool(self.address and is_connected(self.address))
+        self.api.heartbeat(
+            # "" (not None) so a cleared source is actually transmitted:
+            # the router drops null fields (exclude_none), and "" maps
+            # back to None there - otherwise a stale source lingers.
+            mode=self.mode,
+            source=self.player.source or "",
+            speakerConnected=connected,
+            nowPlaying=self.player.now_playing,
+            detail=self.voice_detail,
+        )
+        self._last_heartbeat = time.monotonic()
+
     def _beat(self) -> None:
-        now = time.monotonic()
-        if now - self._last_heartbeat >= self.heartbeat_s:
-            self.api.heartbeat(
-                mode=self.mode,
-                source=self.player.source,
-                speakerConnected=bool(self.address and is_connected(self.address)),
-                nowPlaying=self.player.now_playing,
-                detail=self.voice_detail,
-            )
-            self._last_heartbeat = now
+        if time.monotonic() - self._last_heartbeat >= self.heartbeat_s:
+            self._push_heartbeat()
 
     def _commands(self) -> list[dict]:
         now = time.monotonic()
@@ -183,13 +190,13 @@ class Agent:
         else:
             self.voice_detail = f"no pude reproducir: {detail}"
             log.error("playback failed: %s", detail)
-        self._last_heartbeat = 0.0  # force an immediate heartbeat
+        self._push_heartbeat()  # reflect the new state in the UI at once
 
     def stop_playing(self, spoken_text: str = "") -> None:
         self.player.stop()
         self.mode = "listening"
         self.api.intent("stop", spoken_text)
-        self._last_heartbeat = 0.0
+        self._push_heartbeat()  # reflect "listening" in the UI at once
 
     # --- main loop --------------------------------------------------------
 
