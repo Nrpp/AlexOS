@@ -19,6 +19,11 @@ Wants=pipewire.service wireplumber.service
 
 [Service]
 Type=simple
+# A --user service gets a minimal PATH that can miss where pactl /
+# parecord / cvlc / chromium live (e.g. a Homebrew prefix), which
+# silently breaks audio while bluetoothctl still works. install.sh bakes
+# your real PATH in here for you; if you write this unit by hand, set it:
+#   Environment=PATH=/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin
 # %h = the user's home. Adjust if your AlexOS checkout isn't ~/AlexOS
 # (install.sh writes the resolved path for you).
 ExecStart=%h/AlexOS/modules/voice_dj/agent/.venv/bin/python %h/AlexOS/modules/voice_dj/agent/listen.py

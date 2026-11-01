@@ -59,6 +59,13 @@ fi
 
 # --- 3. systemd --user service -------------------------------------------
 mkdir -p "$UNIT_DIR"
+# The agent shells out to pactl, parecord/pw-record, cvlc/ffplay,
+# chromium and bluetoothctl. A systemd --user service gets a minimal
+# PATH that often misses where some of these live (e.g. a Homebrew
+# prefix), which silently breaks audio while Bluetooth still "connects".
+# Bake the install-time PATH (plus the audio tools' own dir) into the
+# unit so the service sees exactly what you see in your shell.
+AUDIO_BIN="$(dirname "$(command -v pactl 2>/dev/null || command -v pw-record 2>/dev/null || echo /usr/bin/pactl)")"
 cat > "$UNIT" <<EOF
 [Unit]
 Description=AlexOS voice_dj agent (wake word + music on the Bluetooth speaker)
@@ -67,6 +74,7 @@ Wants=pipewire.service wireplumber.service
 
 [Service]
 Type=simple
+Environment=PATH=$AUDIO_BIN:$PATH
 ExecStart=$VENV/bin/python $AGENT_DIR/listen.py
 Restart=on-failure
 RestartSec=5
@@ -80,7 +88,10 @@ echo "==> wrote $UNIT"
 # (needed for the mic, the speaker audio, and Chromium for Spotify).
 systemctl --user import-environment WAYLAND_DISPLAY DISPLAY XDG_RUNTIME_DIR PULSE_SERVER 2>/dev/null || true
 systemctl --user daemon-reload
-systemctl --user enable --now voice-dj.service
+systemctl --user enable voice-dj.service
+# restart (not just `enable --now`, which won't restart an already-running
+# instance) so a re-run always picks up unit/config changes.
+systemctl --user restart voice-dj.service
 
 echo ""
 echo "==> done. The agent is running."
