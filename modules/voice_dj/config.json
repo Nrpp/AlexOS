@@ -32,7 +32,8 @@
     "source": "spotify",
     "spotifyPlaylistUrl": "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
     "radioStreamUrl": "https://stream.radioparadise.com/mp3-128",
-    "radioName": "Radio Paradise"
+    "radioName": "Radio Paradise",
+    "volumePercent": 55
   },
   "agent": {
     "apiBaseUrl": "http://localhost:8000",

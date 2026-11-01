@@ -127,6 +127,21 @@ class Player:
                 return wid
         return None
 
+    def _minimize_player(self) -> None:
+        """Hide the Spotify window so it doesn't sit on top of the AlexOS
+        screen - playback keeps going while it's hidden. Uses `windowunmap`
+        (not `windowminimize`, which the Pi's Wayland/XWayland compositor
+        ignores); audio confirmed to continue while unmapped. Best-effort."""
+        if not shutil.which("xdotool"):
+            return
+        wid = self._player_window()
+        if not wid:
+            return
+        try:
+            subprocess.run(["xdotool", "windowunmap", wid], timeout=5, check=False)
+        except (OSError, subprocess.SubprocessError):
+            pass
+
     def _press_play(self) -> None:
         """Press the Spotify web player's play/pause (spacebar) on the
         player window."""
@@ -152,6 +167,7 @@ class Player:
                 return  # stopped/switched while we waited
             if self._audio_flowing():
                 log.info("spotify playback started")
+                self._minimize_player()  # tuck Chromium away; audio keeps going
                 return
             # Only presses once a real player window (a cued track/
             # playlist title) exists; otherwise waits for it to load.

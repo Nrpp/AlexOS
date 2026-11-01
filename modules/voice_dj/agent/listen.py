@@ -33,7 +33,15 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from bt_audio import ensure_connected, find_address_by_name, is_connected, mic_source_name, use_mic_profile, use_music_profile
+from bt_audio import (
+    ensure_connected,
+    find_address_by_name,
+    is_connected,
+    mic_source_name,
+    set_volume,
+    use_mic_profile,
+    use_music_profile,
+)
 from player import Player
 from recognizer import Recognizer
 
@@ -91,7 +99,9 @@ class Agent:
         self.config = load_config()
         self.api = AgentAPI(self.config.get("agent", {}).get("apiBaseUrl", "http://localhost:8000"))
         self.player = Player(self.config)
-        self.default_source = self.config.get("music", {}).get("source", "radio")
+        music_cfg = self.config.get("music", {})
+        self.default_source = music_cfg.get("source", "radio")
+        self.volume_percent = music_cfg.get("volumePercent")
         agent_cfg = self.config.get("agent", {})
         self.heartbeat_s = float(agent_cfg.get("heartbeatSeconds", 5))
         self.command_poll_s = float(agent_cfg.get("commandPollSeconds", 2))
@@ -176,6 +186,8 @@ class Agent:
             self.recognizer.stop_capture()
         if self.address and not use_music_profile(self.address)[0]:
             log.warning("couldn't switch speaker to A2DP; trying to play anyway")
+        if self.address and self.volume_percent is not None:
+            set_volume(self.address, self.volume_percent)
         if source == "spotify":
             ok, detail = self.player.play_spotify()
             if not ok:

@@ -212,3 +212,15 @@ def use_mic_profile(address: str) -> tuple[bool, str]:
 
 def mic_source_name(address: str) -> str | None:
     return _node_for(address, "sources")
+
+
+def set_volume(address: str, percent: int) -> bool:
+    """Set the speaker's A2DP output sink to `percent` (0-100). BlueZ
+    tends to slam the volume to 100% when a device connects, so we pin a
+    sane level each time music starts instead of blasting at max."""
+    sink = _node_for(address, "sinks")
+    if not sink:
+        return False
+    percent = max(0, min(100, int(percent)))
+    rc, _out, _err = _run(["pactl", "set-sink-volume", sink, f"{percent}%"])
+    return rc == 0
